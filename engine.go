@@ -7,10 +7,11 @@ import (
 type Engine struct {
 	isRunning bool
 	window    *Window
+	renderer  *Renderer
 }
 
-func NewEngine(window *Window) *Engine {
-	return &Engine{window: window}
+func NewEngine(window *Window, renderer *Renderer) *Engine {
+	return &Engine{window: window, renderer: renderer}
 }
 
 func (e *Engine) setup() { e.isRunning = true }
@@ -35,7 +36,8 @@ func (e *Engine) processInput() {
 func (e *Engine) update() {}
 
 func (e *Engine) render() {
-	e.window.SetPixel(100, 200, Red)
+	e.renderer.DrawRect(100, 200, 300, 450, Red)
+
 	e.window.Present()
 	e.window.Clear(Transparent)
 }

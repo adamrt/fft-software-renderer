@@ -72,11 +72,12 @@ This is the journal of development.
 ## Daily Notes
 ### 2022-12-12
 
-Today I ready through chapter 1 of [3D Math Primer for Graphics and
-Game Development](https://gamemath.com/book/index.html). I've done
-lots of 3D studying over the past year, but I've skimmed this (which I
-found yesterday) and the way its written really clicks with me. I'm
-hoping to get a better understanding as I build out this engine.
+Today I ready through chapter 1 and part of 2 of [3D Math Primer for
+Graphics and Game
+Development](https://gamemath.com/book/index.html). I've done lots of
+3D studying over the past year, but I've skimmed this (which I found
+yesterday) and the way its written really clicks with me. I'm hoping
+to get a better understanding as I build out this engine.
 
 ### Mathmatical notes
 

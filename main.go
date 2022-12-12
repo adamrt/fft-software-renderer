@@ -9,8 +9,8 @@ func main() {
 
 	window := NewWindow(windowWidth, windowHeight, false)
 	defer window.Close()
-
-	engine := NewEngine(window)
+	renderer := NewRenderer(window)
+	engine := NewEngine(window, renderer)
 
 	engine.setup()
 	for engine.isRunning {
