@@ -39,5 +39,4 @@ func (e *Engine) render() {
 	e.renderer.DrawRect(100, 200, 300, 450, Red)
 
 	e.window.Present()
-	e.window.Clear(Transparent)
 }

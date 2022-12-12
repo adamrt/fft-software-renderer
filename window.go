@@ -112,6 +112,7 @@ func (w *Window) Present() {
 	w.renderer.Copy(w.fgTexture, nil, nil)
 
 	w.renderer.Present()
+	w.Clear(Transparent)
 }
 
 func (w *Window) Close() {
