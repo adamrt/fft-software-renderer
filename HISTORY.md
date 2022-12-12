@@ -79,7 +79,12 @@ Development](https://gamemath.com/book/index.html). I've done lots of
 yesterday) and the way its written really clicks with me. I'm hoping
 to get a better understanding as I build out this engine.
 
-### Mathmatical notes
+
+**Result**: Draw a cube points on the screen with orthographic
+projection and rotate them.
+
+
+#### Mathmatical notes
 
 My basic math skills are about 20 years old, so I'm taking notes I can
 refer back to.

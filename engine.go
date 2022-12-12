@@ -4,6 +4,10 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+var projectedPoints []Vec2
+var cube = shapeCube()
+var cubeRotation = Vec3{0, 0, 0}
+
 type Engine struct {
 	isRunning bool
 	window    *Window
@@ -33,10 +37,43 @@ func (e *Engine) processInput() {
 	}
 }
 
-func (e *Engine) update() {}
+func (e *Engine) update() {
+	cubeRotation.x += 0.001
+	cubeRotation.y += 0.005
+	cubeRotation.z += 0.002
+	for _, point := range cube {
+		transformedPoint := rotate_x(point, cubeRotation.x)
+		transformedPoint = rotate_y(transformedPoint, cubeRotation.y)
+		transformedPoint = rotate_z(transformedPoint, cubeRotation.z)
+
+		projectedPoint := project(transformedPoint)
+		projectedPoints = append(projectedPoints, projectedPoint)
+	}
+}
 
 func (e *Engine) render() {
-	e.renderer.DrawRect(100, 200, 300, 450, Red)
+	// Draw
+	hw := e.window.width / 2
+	hh := e.window.height / 2
+	for _, point := range projectedPoints {
+		e.renderer.DrawRect(
+			int(point.x)+hw,
+			int(point.y)+hh,
+			4,
+			4,
+			Yellow,
+		)
+	}
 
+	// Present
+	projectedPoints = projectedPoints[:0]
 	e.window.Present()
+}
+
+func project(v Vec3) Vec2 {
+	fov := 128.0 // arbitrary fov to scale the small points
+	return Vec2{
+		x: (v.x * fov),
+		y: (v.y * fov),
+	}
 }
