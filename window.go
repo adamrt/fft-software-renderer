@@ -92,7 +92,9 @@ func NewWindowFullscreen() *Window {
 }
 
 func (w *Window) SetPixel(x, y int, color Color) {
-	w.colorbuffer[(w.width*y)+x] = color
+	if x > 0 && x < w.width && y > 0 && y < w.height {
+		w.colorbuffer[(w.width*y)+x] = color
+	}
 }
 
 func (w *Window) Clear(color Color) {
