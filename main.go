@@ -1,8 +1,13 @@
 package main
 
+const (
+	windowWidth  = 1280
+	windowHeight = 720
+)
+
 func main() {
 
-	window := NewWindow(800, 800)
+	window := NewWindow(windowWidth, windowHeight, false)
 	defer window.Close()
 
 	engine := NewEngine(window)

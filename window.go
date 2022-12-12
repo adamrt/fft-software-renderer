@@ -16,12 +16,32 @@ type Window struct {
 	colorbuffer []Color
 }
 
-func NewWindow(width, height int) *Window {
+func NewWindow(width, height int, fullscreen bool) *Window {
 	if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
 		panic(err)
 	}
 
-	window, err := sdl.CreateWindow("Heretic", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, int32(width), int32(height), sdl.WINDOW_SHOWN)
+	var windowFlags uint32 = sdl.WINDOW_SHOWN
+
+	if fullscreen {
+		windowFlags = sdl.WINDOW_FULLSCREEN
+
+		mode, err := sdl.GetCurrentDisplayMode(0)
+		if err != nil {
+			panic(err)
+		}
+		width = int(mode.W) / 2
+		height = int(mode.H) / 2
+	}
+
+	window, err := sdl.CreateWindow(
+		"Heretic",
+		sdl.WINDOWPOS_UNDEFINED,
+		sdl.WINDOWPOS_UNDEFINED,
+		int32(width),
+		int32(height),
+		windowFlags,
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -62,6 +82,13 @@ func NewWindow(width, height int) *Window {
 
 		colorbuffer: make([]Color, width*height),
 	}
+}
+
+// NewWindowFullscreen returns a fullscreen window with
+// half the resolution of the display. The resolution is
+// pulled from the device itself.
+func NewWindowFullscreen() *Window {
+	return NewWindow(0, 0, true)
 }
 
 func (w *Window) SetPixel(x, y int, color Color) {
