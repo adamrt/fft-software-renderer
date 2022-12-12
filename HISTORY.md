@@ -80,8 +80,11 @@ yesterday) and the way its written really clicks with me. I'm hoping
 to get a better understanding as I build out this engine.
 
 
-**Result**: Draw a cube points on the screen with orthographic
-projection and rotate them.
+**Result**:
+ - Draw a cube points on the screen
+ - Rotate points with rotation functions per axes
+ - Allow variable FPS timestep
+ - Add smallest possible orthographic projects (disgard the z component).
 
 
 #### Mathmatical notes

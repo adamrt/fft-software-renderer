@@ -4,9 +4,20 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-var projectedPoints []Vec2
-var cube = shapeCube()
-var cubeRotation = Vec3{0, 0, 0}
+const (
+	FPS        = 60
+	MSPerFrame = (1000 / FPS)
+)
+
+// Timing
+var previous uint32
+
+// Data
+var (
+	projectedPoints []Vec2
+	cube            = shapeCube()
+	cubeRotation    = Vec3{0, 0, 0}
+)
 
 type Engine struct {
 	isRunning bool
@@ -18,7 +29,10 @@ func NewEngine(window *Window, renderer *Renderer) *Engine {
 	return &Engine{window: window, renderer: renderer}
 }
 
-func (e *Engine) setup() { e.isRunning = true }
+func (e *Engine) setup() {
+	e.isRunning = true
+	previous = sdl.GetTicks()
+}
 
 func (e *Engine) processInput() {
 	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
@@ -38,6 +52,11 @@ func (e *Engine) processInput() {
 }
 
 func (e *Engine) update() {
+	if wait := MSPerFrame - (sdl.GetTicks() - previous); wait > 0 && wait <= MSPerFrame {
+		sdl.Delay(wait)
+	}
+	previous = sdl.GetTicks()
+
 	cubeRotation.x += 0.001
 	cubeRotation.y += 0.005
 	cubeRotation.z += 0.002
