@@ -35,6 +35,7 @@ func (e *Engine) processInput() {
 func (e *Engine) update() {}
 
 func (e *Engine) render() {
-	e.window.Clear(Blue)
+	e.window.SetPixel(100, 200, Red)
 	e.window.Present()
+	e.window.Clear(Transparent)
 }

@@ -11,7 +11,8 @@ type Window struct {
 	height      int
 	window      *sdl.Window
 	renderer    *sdl.Renderer
-	texture     *sdl.Texture
+	fgTexture   *sdl.Texture // Texture for colorbuffer
+	bgTexture   *sdl.Texture // Static texture for background
 	colorbuffer []Color
 }
 
@@ -30,20 +31,34 @@ func NewWindow(width, height int) *Window {
 		panic(err)
 	}
 
-	// Our Color struct is in RGBA8888 format but the SDL texture is set to ABGR8888.
+	// Our Color struct is in RGBA8888 format but the SDL fgTexture is set to ABGR8888.
 	// SDL reads the strict in big Indian and we are currently on little endian.
-	texture, err := renderer.CreateTexture(sdl.PIXELFORMAT_ABGR8888, sdl.TEXTUREACCESS_STREAMING, int32(width), int32(height))
+	fgTexture, err := renderer.CreateTexture(sdl.PIXELFORMAT_ABGR8888, sdl.TEXTUREACCESS_STREAMING, int32(width), int32(height))
 	if err != nil {
 		panic(err)
 	}
+
+	// This is required for the FG texture to use transparent instead of opaque and
+	// let the bg texture be seen.
+	fgTexture.SetBlendMode(sdl.BLENDMODE_BLEND)
+
+	// Background Texture. Static and pre-drawn.
+	bgTexture, err := renderer.CreateTexture(sdl.PIXELFORMAT_ABGR8888, sdl.TEXTUREACCESS_STATIC, int32(width), int32(height))
+	if err != nil {
+		panic(err)
+	}
+	bgBuffer := genCheckerboard(width, height)
+	// Update the texture now as it wont change.
+	bgTexture.Update(nil, unsafe.Pointer(&bgBuffer[0]), width*4)
 
 	return &Window{
 		width:  width,
 		height: height,
 
-		window:   window,
-		renderer: renderer,
-		texture:  texture,
+		window:    window,
+		renderer:  renderer,
+		fgTexture: fgTexture,
+		bgTexture: bgTexture,
 
 		colorbuffer: make([]Color, width*height),
 	}
@@ -62,15 +77,34 @@ func (w *Window) Clear(color Color) {
 }
 
 func (w *Window) Present() {
-	// w.width*4 is the pitch (size of each row). Width * 32bit color.
-	w.texture.Update(nil, unsafe.Pointer(&w.colorbuffer[0]), w.width*4)
-	w.renderer.Copy(w.texture, nil, nil)
+	w.fgTexture.Update(nil, unsafe.Pointer(&w.colorbuffer[0]), w.width*4)
+
+	w.renderer.Copy(w.bgTexture, nil, nil)
+	w.renderer.Copy(w.fgTexture, nil, nil)
+
 	w.renderer.Present()
 }
 
 func (w *Window) Close() {
-	w.texture.Destroy()
+	w.fgTexture.Destroy()
 	w.renderer.Destroy()
 	w.window.Destroy()
 	sdl.Quit()
+}
+
+// This returns a checkerboard for background use.
+// It will be copied into a sdl.Texture.
+func genCheckerboard(width, height int) []Color {
+	// Draw checkerboard to buffer
+	bgBuffer := make([]Color, width*height)
+	for x := 0; x < width; x++ {
+		for y := 0; y < height; y++ {
+			if (y%(64) < 32) == (x%(64) < 32) {
+				bgBuffer[y*width+x] = LightGray
+			} else {
+				bgBuffer[y*width+x] = DarkGray
+			}
+		}
+	}
+	return bgBuffer
 }
