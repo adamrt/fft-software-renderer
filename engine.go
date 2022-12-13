@@ -15,7 +15,7 @@ var previous uint32
 // Data
 var (
 	trianglesToRender = []Triangle{}
-	mesh              = cubeMesh()
+	mesh              = Mesh{}
 )
 
 type Engine struct {
@@ -28,6 +28,9 @@ func NewEngine(window *Window, renderer *Renderer) *Engine {
 	return &Engine{window: window, renderer: renderer}
 }
 
+func (e *Engine) loadObj(file string) {
+	mesh = NewMeshFromObj(file)
+}
 func (e *Engine) setup() {
 	e.isRunning = true
 	previous = sdl.GetTicks()
@@ -65,11 +68,9 @@ func (e *Engine) update() {
 	mesh.rotation.y += 0.005
 	mesh.rotation.z += 0.002
 
-	for _, face := range mesh.faces {
+	for _, tri := range mesh.triangles {
 		var t Triangle
-		for i, idx := range face.indexes {
-			vertex := mesh.vertices[idx-1]
-
+		for i, vertex := range tri.points {
 			// Transform
 			rotated := rotate(vertex, mesh.rotation)
 
@@ -90,13 +91,13 @@ func (e *Engine) render() {
 	// Draw
 	for _, t := range trianglesToRender {
 		a, b, c := t.points[0], t.points[1], t.points[2]
-		e.renderer.DrawLine(int(a.x), int(a.y), int(b.x), int(b.y), Green)
-		e.renderer.DrawLine(int(b.x), int(b.y), int(c.x), int(c.y), Green)
-		e.renderer.DrawLine(int(c.x), int(c.y), int(a.x), int(a.y), Green)
+		e.renderer.DrawLine(int(a.x), int(a.y), int(b.x), int(b.y), White)
+		e.renderer.DrawLine(int(b.x), int(b.y), int(c.x), int(c.y), White)
+		e.renderer.DrawLine(int(c.x), int(c.y), int(a.x), int(a.y), White)
 
-		e.renderer.DrawRect(int(a.x)-2, int(a.y)-2, 4, 4, Yellow)
-		e.renderer.DrawRect(int(b.x)-2, int(b.y)-2, 4, 4, Yellow)
-		e.renderer.DrawRect(int(c.x)-2, int(c.y)-2, 4, 4, Yellow)
+		e.renderer.DrawRect(int(a.x)-2, int(a.y)-2, 4, 4, Red)
+		e.renderer.DrawRect(int(b.x)-2, int(b.y)-2, 4, 4, Red)
+		e.renderer.DrawRect(int(c.x)-2, int(c.y)-2, 4, 4, Red)
 
 	}
 
@@ -104,11 +105,12 @@ func (e *Engine) render() {
 	e.window.Present()
 }
 
-func project(v Vec3) Vec2 {
+func project(v Vec3) Vec3 {
 	fov := 128.0 // arbitrary fov to scale the small points
-	return Vec2{
+	return Vec3{
 		x: (v.x * fov),
 		y: (v.y * fov),
+		z: v.z,
 	}
 }
 
