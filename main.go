@@ -7,7 +7,7 @@ const (
 
 func main() {
 
-	window := NewWindow(windowWidth, windowHeight, false)
+	window := NewWindow(windowWidth, windowHeight)
 	defer window.Close()
 	renderer := NewRenderer(window)
 	engine := NewEngine(window, renderer)

@@ -89,8 +89,11 @@ to get a better understanding as I build out this engine.
   Triangles are the collection of Vec2 points after vertex projection
 
 - Render vertex dots of triangles
+- Render lines of triangles (wireframe)
 
 **Result**:
+
+- Rotating 3D wireframe cube
 
 #### Mathmatical notes
 
