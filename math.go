@@ -2,6 +2,10 @@ package main
 
 import "math"
 
+func abs(i int) int {
+	return int(math.Abs(float64(i)))
+}
+
 type Vec2 struct {
 	x, y float64
 }

@@ -61,9 +61,9 @@ func (e *Engine) update() {
 	trianglesToRender = trianglesToRender[:0]
 
 	// Rotate more each frame
-	mesh.rotation.x += 0.025
+	mesh.rotation.x += 0.003
 	mesh.rotation.y += 0.005
-	mesh.rotation.z += 0.015
+	mesh.rotation.z += 0.002
 
 	for _, face := range mesh.faces {
 		var t Triangle
@@ -89,9 +89,14 @@ func (e *Engine) update() {
 func (e *Engine) render() {
 	// Draw
 	for _, t := range trianglesToRender {
-		e.renderer.DrawRect(int(t.points[0].x), int(t.points[0].y), 4, 4, Yellow)
-		e.renderer.DrawRect(int(t.points[1].x), int(t.points[1].y), 4, 4, Yellow)
-		e.renderer.DrawRect(int(t.points[2].x), int(t.points[2].y), 4, 4, Yellow)
+		a, b, c := t.points[0], t.points[1], t.points[2]
+		e.renderer.DrawLine(int(a.x), int(a.y), int(b.x), int(b.y), Green)
+		e.renderer.DrawLine(int(b.x), int(b.y), int(c.x), int(c.y), Green)
+		e.renderer.DrawLine(int(c.x), int(c.y), int(a.x), int(a.y), Green)
+
+		e.renderer.DrawRect(int(a.x)-2, int(a.y)-2, 4, 4, Yellow)
+		e.renderer.DrawRect(int(b.x)-2, int(b.y)-2, 4, 4, Yellow)
+		e.renderer.DrawRect(int(c.x)-2, int(c.y)-2, 4, 4, Yellow)
 
 	}
 
