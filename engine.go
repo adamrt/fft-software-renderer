@@ -14,9 +14,8 @@ var previous uint32
 
 // Data
 var (
-	projectedPoints []Vec2
-	cube            = shapeCube()
-	cubeRotation    = Vec3{0, 0, 0}
+	trianglesToRender = []Triangle{}
+	mesh              = cubeMesh()
 )
 
 type Engine struct {
@@ -52,40 +51,51 @@ func (e *Engine) processInput() {
 }
 
 func (e *Engine) update() {
+	// Variable timestep
 	if wait := MSPerFrame - (sdl.GetTicks() - previous); wait > 0 && wait <= MSPerFrame {
 		sdl.Delay(wait)
 	}
 	previous = sdl.GetTicks()
 
-	cubeRotation.x += 0.001
-	cubeRotation.y += 0.005
-	cubeRotation.z += 0.002
-	for _, point := range cube {
-		transformedPoint := rotate_x(point, cubeRotation.x)
-		transformedPoint = rotate_y(transformedPoint, cubeRotation.y)
-		transformedPoint = rotate_z(transformedPoint, cubeRotation.z)
+	// Clear triangles from last frame
+	trianglesToRender = trianglesToRender[:0]
 
-		projectedPoint := project(transformedPoint)
-		projectedPoints = append(projectedPoints, projectedPoint)
+	// Rotate more each frame
+	mesh.rotation.x += 0.025
+	mesh.rotation.y += 0.005
+	mesh.rotation.z += 0.015
+
+	for _, face := range mesh.faces {
+		var t Triangle
+		for i, idx := range face.indexes {
+			vertex := mesh.vertices[idx-1]
+
+			// Transform
+			rotated := rotate(vertex, mesh.rotation)
+
+			// Project
+			projected := project(rotated)
+
+			// Scale and translate to middle of screen
+			projected.x += float64(e.window.width / 2)
+			projected.y += float64(e.window.height / 2)
+
+			t.points[i] = projected
+		}
+		trianglesToRender = append(trianglesToRender, t)
 	}
 }
 
 func (e *Engine) render() {
 	// Draw
-	hw := e.window.width / 2
-	hh := e.window.height / 2
-	for _, point := range projectedPoints {
-		e.renderer.DrawRect(
-			int(point.x)+hw,
-			int(point.y)+hh,
-			4,
-			4,
-			Yellow,
-		)
+	for _, t := range trianglesToRender {
+		e.renderer.DrawRect(int(t.points[0].x), int(t.points[0].y), 4, 4, Yellow)
+		e.renderer.DrawRect(int(t.points[1].x), int(t.points[1].y), 4, 4, Yellow)
+		e.renderer.DrawRect(int(t.points[2].x), int(t.points[2].y), 4, 4, Yellow)
+
 	}
 
 	// Present
-	projectedPoints = projectedPoints[:0]
 	e.window.Present()
 }
 
@@ -95,4 +105,11 @@ func project(v Vec3) Vec2 {
 		x: (v.x * fov),
 		y: (v.y * fov),
 	}
+}
+
+func rotate(v, rotation Vec3) Vec3 {
+	rotated := rotate_x(v, rotation.x)
+	rotated = rotate_y(rotated, rotation.y)
+	rotated = rotate_z(rotated, rotation.z)
+	return rotated
 }

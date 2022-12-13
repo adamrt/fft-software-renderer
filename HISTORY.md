@@ -79,13 +79,18 @@ Development](https://gamemath.com/book/index.html). I've done lots of
 yesterday) and the way its written really clicks with me. I'm hoping
 to get a better understanding as I build out this engine.
 
+- Draw a cube points on the screen
+- Rotate points with rotation functions per axes
+- Add variable FPS timestep
+- Add smallest possible orthographic projects (disgard the z component).
+- Add Mesh, Face and Triangle
+
+  Faces are for indexing vertices instead of duplicating overlapping vertex data.
+  Triangles are the collection of Vec2 points after vertex projection
+
+- Render vertex dots of triangles
 
 **Result**:
- - Draw a cube points on the screen
- - Rotate points with rotation functions per axes
- - Allow variable FPS timestep
- - Add smallest possible orthographic projects (disgard the z component).
-
 
 #### Mathmatical notes
 
