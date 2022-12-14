@@ -24,9 +24,9 @@ func rotate_x(v Vec3, angle float64) Vec3 {
 
 func rotate_y(v Vec3, angle float64) Vec3 {
 	return Vec3{
-		x: v.x*math.Cos(angle) - v.z*math.Sin(angle),
+		x: v.x*math.Cos(angle) + v.z*math.Sin(angle),
 		y: v.y,
-		z: v.x*math.Sin(angle) + v.z*math.Cos(angle),
+		z: v.x*-math.Sin(angle) + v.z*math.Cos(angle),
 	}
 }
 

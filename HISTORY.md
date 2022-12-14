@@ -1,5 +1,6 @@
 # Heretic Project History
 
+## Description
 This is a log of the development and learning process for Heretic.
 
 Once I realized you could extract level data from the original Final
@@ -27,6 +28,16 @@ The only dependency is SDL2. All rendering is software rasterized
 without OpenGL.
 
 This is the journal of development.
+
+## Resources
+
+I used a million sources for learning 3D but I think these were some
+of the ones I referred to the most.
+
+- [Pikuma 3D Computer Graphics Programming Course](https://pikuma.com/courses/learn-3d-computer-graphics-programming)
+- [3D Math Primer for Graphics and Game Development.](https://gamemath.com/)
+- [Foundations of Game Engine Development: Volume 1](https://foundationsofgameenginedev.com/)
+- [Javidx9 3D Graphics Engine Series](https://www.youtube.com/watch?v=ih20l3pJoeU)
 
 ## Design Decisions
 
@@ -70,6 +81,121 @@ This is the journal of development.
   is memory usage is high.
 
 ## Daily Notes
+### 2022-12-14
+
+Okay, after thinking about yesterdays problem for a while, I realized
+that the option (#3) of inverting the Y-axis is the correct
+solution. This is what Gustavo suggested as his solution [1] as
+well. When I first did this course about a year ago, I didn't like
+this solution since I thought it was to compensate for wavefront
+format (.obj files). I didn't want to change our engine for the
+format, and instead wanted to change the format during
+read/import.
+
+Now with a little more understanding I realize that the wavefront file
+is correct (`+Y` axis up) and our medium is whats incorrect (`+Y` axis
+down). Our medium being the color buffer. Yesterday, I was thinking
+this fix would throw off calculations (dot product, lighting, culling
+etc), down the road, but I was wrong. It will all work as expected.
+
+This solution is also better than the other 2 options I listed as
+well. Both of those options essentially invert the color buffer after
+drawing. We have two methods of "drawing": setting individual pixels
+starting at top-left (0,0), and drawing lines/triangles that have 3D
+coordinates. The 3D coordinates go through transformation, projection,
+etc, then, with option #3, have their Y-axis inverted. This means our
+3D stuff gets drawn correctly, but our pixel drawings still get to use
+the logical top-left (0,0) 2D coordinates, instead of starting at (0,
+HEIGHT-1) if we used the "invert-the-whole-image" method.
+
+**Follow-up 1**: I wrote the above comment to Gustavo thinking it was
+solved. But I realized that due to the left-handed rule, the Y-axis
+might be off. When pointing your thumb in the direction of a positive
+axis (ie right for `+X`), if you curl your fingers that is the
+direction the object should rotate with _positive_ rotation. This
+works with the above fix for the `X` and `Z` axis, but the `Y` axis is
+reversed.
+
+**Follow-up 2**: Turns out that the Y-axis was off due to an actual
+bug in the `rotate_y` function. The `-sin(angle)` was in the wrong
+place. I was looking at this function because I was thinking I could
+just mess with it to get the results I wanted, only to realize it was
+actually wrong. I knew it was wrong because of a sentence I remembered
+from [Foundations of Game Engine Development: Volume
+1](https://foundationsofgameenginedev.com/) on page 61. It explains
+where the `-sin` should go. _"The negated sine function always appears
+one row below and one column to the left, with wraparound, of the
+entry containing the one in the matrix."_ Thanks for that!
+
+
+---
+
+Remaining issues today:
+
+**Orthographic backface culling**: When removing the perspective
+projection (which now is simply `x/z & y/z`) the backface culling
+doesn't work as expected.
+
+**Notes**:
+- Vector subtractions returns a vector pointing to the first element.
+
+    `v := camera.position.Sub(someVector)`. v will point from someVetor to camera.
+
+[1] Non-Free Link: [Inverted Vertical Screen Values](https://courses.pikuma.com/courses/take/learn-computer-graphics-programming/lessons/12296518-inverted-vertical-screen-values/discussions/5719619)
+
+### 2022-12-13
+
+Last night and this morning I've been struggling with some fundamental
+issue that I think I've run into in all of my previous prototypes.
+
+With a left-handed coordinate system, the `+X`, `+Y` and `+Z` go
+right, up and away from the viewer, respectively.
+
+In the 2D colorbuffer that we use to render, the `+X` and `+Y` go
+right and *down*. For the color buffer this makes sense because the
+colorbuffer starts at `0,0` on the top-left corner.
+
+The problem is that when projecting onto the screen everything is
+upside down. In the past I've always just inverted the Y-axis of the
+mesh during import.
+
+But now I'm realizing that during translation, this also causes
+problem. If I increase the `Y` coordinate by +1 on any mesh, the mesh
+will move down on the screen instead of up.
+
+Also if I draw axes from the origin and pointing to their positive direction like so:
+
+```
+{0,0,0} -> {1,0,0} (X axis)
+{0,0,0} -> {0,1,0} (Y axis)
+{0,0,0} -> {0,0,1} (Z axis)
+```
+
+The `+Y` axis points down.
+
+
+This can be visually "fixed" by doing one of the following.
+
+1. Change `buffer[(width*y)+x] = color` to `buffer[(width*(height-y-1))+x] = color`
+
+    This will draw the buffer upside down.
+
+1. Use `SDL_RendererFlip` with `SDL_RenderCopyEx()` to flip the image.
+
+   This way you will draw the same way, but use SDL to flip the image
+before rendering it.
+
+1. Invert the Y-axis of vertices when importing a mesh.
+
+I'm not sure that these fix the problem or just mask it. Also I'm not
+sure that once we start using translation matrices if the problems
+will be fixed, I don't think so but I might beable to understand it more.
+
+- Removed the vertex indicies from the Mesh and just use the vertices
+  directly (even if duplicated). These maps are very small so
+  duplicating vertices isn't a big memory loss for now, and it makes
+  the code easier to follow.
+
 ### 2022-12-12
 
 Today I ready through chapter 1 and part of 2 of [3D Math Primer for

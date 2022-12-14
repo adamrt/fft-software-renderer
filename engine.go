@@ -76,6 +76,9 @@ func (e *Engine) update() {
 
 			// Project
 			projected := project(rotated)
+			// Invert the Y asis to compensate for the Y axis of the model and
+			// the color buffer being different (+Y up vs +Y down, respectively).
+			projected.y *= -1
 
 			// Scale and translate to middle of screen
 			projected.x += float64(e.window.width / 2)
