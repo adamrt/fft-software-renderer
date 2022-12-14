@@ -130,6 +130,12 @@ entry containing the one in the matrix."_ Thanks for that!
 
 ---
 
+**Results**:
+- Backface culling in perspective projection
+
+  Orthographic culling isn't working correctly, but I think that
+  matricies might solve this.
+
 Remaining issues today:
 
 **Orthographic backface culling**: When removing the perspective

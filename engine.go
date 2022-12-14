@@ -19,7 +19,7 @@ var (
 
 	// arbitrary fov to scale the small points
 	fov            = 640.0
-	cameraPosition = Vec3{0, 0, -5}
+	cameraPosition = Vec3{0, 0, 0}
 )
 
 type Engine struct {
@@ -65,18 +65,34 @@ func (e *Engine) update() {
 	previous = sdl.GetTicks()
 
 	// Rotate more each frame
-	mesh.rotation.x += 0.003
-	mesh.rotation.y += 0.005
-	mesh.rotation.z += 0.002
+	// mesh.rotation.x += 0.03
+	mesh.rotation.y += 0.03
+	// mesh.rotation.z += 0.03
 
 	for _, triangle := range mesh.triangles {
+		var vertices [3]Vec3
+
+		// Transform
 		for i, vertex := range triangle.vertices {
-			// Transform
+			// Rotate then move away from the camera (0,0,0)
 			vertex = rotate(vertex, mesh.rotation)
+			vertex.z += 5.0
+			vertices[i] = vertex
+		}
 
-			// Move the vertices away from the camera (0,0,0)
-			vertex.z -= cameraPosition.z
+		// Backface culling
+		a, b, c := vertices[0], vertices[1], vertices[2]
+		ab, ac := b.Sub(a), c.Sub(a)
+		normal := ab.Cross(ac).Normalize()
+		ray := cameraPosition.Sub(a)
+		visibility := normal.Dot(ray)
 
+		if visibility < 0.0 {
+			continue
+		}
+
+		// Projection
+		for i, vertex := range vertices {
 			// Project
 			point := project(vertex)
 
@@ -97,14 +113,16 @@ func (e *Engine) update() {
 func (e *Engine) render() {
 	// Draw
 	for _, t := range trianglesToRender {
+		// Draw triangles
 		a, b, c := t.points[0], t.points[1], t.points[2]
 		e.renderer.DrawLine(int(a.x), int(a.y), int(b.x), int(b.y), White)
 		e.renderer.DrawLine(int(b.x), int(b.y), int(c.x), int(c.y), White)
 		e.renderer.DrawLine(int(c.x), int(c.y), int(a.x), int(a.y), White)
 
-		e.renderer.DrawRect(int(a.x)-2, int(a.y)-2, 4, 4, Red)
-		e.renderer.DrawRect(int(b.x)-2, int(b.y)-2, 4, 4, Red)
-		e.renderer.DrawRect(int(c.x)-2, int(c.y)-2, 4, 4, Red)
+		// Draw vertices
+		// e.renderer.DrawRect(int(a.x)-2, int(a.y)-2, 4, 4, Red)
+		// e.renderer.DrawRect(int(b.x)-2, int(b.y)-2, 4, 4, Red)
+		// e.renderer.DrawRect(int(c.x)-2, int(c.y)-2, 4, 4, Red)
 	}
 
 	// Present
