@@ -9,13 +9,16 @@ const (
 	MSPerFrame = (1000 / FPS)
 )
 
-// Timing
-var previous uint32
-
 // Data
 var (
 	trianglesToRender = []Triangle{}
 	mesh              = Mesh{}
+
+	// Timing
+	previous uint32 = 0
+
+	// arbitrary fov to scale the small points
+	fov = 128.0
 )
 
 type Engine struct {
@@ -60,33 +63,30 @@ func (e *Engine) update() {
 	}
 	previous = sdl.GetTicks()
 
-	// Clear triangles from last frame
-	trianglesToRender = trianglesToRender[:0]
-
 	// Rotate more each frame
 	mesh.rotation.x += 0.003
 	mesh.rotation.y += 0.005
 	mesh.rotation.z += 0.002
 
-	for _, tri := range mesh.triangles {
-		var t Triangle
-		for i, vertex := range tri.points {
+	for _, triangle := range mesh.triangles {
+		for i, vertex := range triangle.vertices {
 			// Transform
-			rotated := rotate(vertex, mesh.rotation)
+			vertex = rotate(vertex, mesh.rotation)
 
 			// Project
-			projected := project(rotated)
+			point := project(vertex)
+
 			// Invert the Y asis to compensate for the Y axis of the model and
 			// the color buffer being different (+Y up vs +Y down, respectively).
-			projected.y *= -1
+			point.y *= -1
 
 			// Scale and translate to middle of screen
-			projected.x += float64(e.window.width / 2)
-			projected.y += float64(e.window.height / 2)
+			point.x += float64(e.window.width / 2)
+			point.y += float64(e.window.height / 2)
 
-			t.points[i] = projected
+			triangle.points[i] = point
 		}
-		trianglesToRender = append(trianglesToRender, t)
+		trianglesToRender = append(trianglesToRender, triangle)
 	}
 }
 
@@ -101,19 +101,19 @@ func (e *Engine) render() {
 		e.renderer.DrawRect(int(a.x)-2, int(a.y)-2, 4, 4, Red)
 		e.renderer.DrawRect(int(b.x)-2, int(b.y)-2, 4, 4, Red)
 		e.renderer.DrawRect(int(c.x)-2, int(c.y)-2, 4, 4, Red)
-
 	}
 
 	// Present
 	e.window.Present()
+
+	// Clear triangles from last frame
+	trianglesToRender = trianglesToRender[:0]
 }
 
-func project(v Vec3) Vec3 {
-	fov := 128.0 // arbitrary fov to scale the small points
-	return Vec3{
+func project(v Vec3) Vec2 {
+	return Vec2{
 		x: (v.x * fov),
 		y: (v.y * fov),
-		z: v.z,
 	}
 }
 
