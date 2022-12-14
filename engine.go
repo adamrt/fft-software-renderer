@@ -18,7 +18,8 @@ var (
 	previous uint32 = 0
 
 	// arbitrary fov to scale the small points
-	fov = 128.0
+	fov            = 640.0
+	cameraPosition = Vec3{0, 0, -5}
 )
 
 type Engine struct {
@@ -73,6 +74,9 @@ func (e *Engine) update() {
 			// Transform
 			vertex = rotate(vertex, mesh.rotation)
 
+			// Move the vertices away from the camera (0,0,0)
+			vertex.z -= cameraPosition.z
+
 			// Project
 			point := project(vertex)
 
@@ -112,8 +116,8 @@ func (e *Engine) render() {
 
 func project(v Vec3) Vec2 {
 	return Vec2{
-		x: (v.x * fov),
-		y: (v.y * fov),
+		x: (v.x * fov) / v.z,
+		y: (v.y * fov) / v.z,
 	}
 }
 
