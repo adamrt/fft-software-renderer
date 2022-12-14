@@ -82,7 +82,7 @@ func (e *Engine) update() {
 
 		// Backface culling
 		a, b, c := vertices[0], vertices[1], vertices[2]
-		ab, ac := b.Sub(a), c.Sub(a)
+		ab, ac := b.Sub(a).Normalize(), c.Sub(a).Normalize()
 		normal := ab.Cross(ac).Normalize()
 		ray := cameraPosition.Sub(a)
 		visibility := normal.Dot(ray)
