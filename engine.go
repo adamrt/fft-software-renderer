@@ -64,19 +64,28 @@ func (e *Engine) update() {
 	}
 	previous = sdl.GetTicks()
 
-	// Rotate more each frame
-	// mesh.rotation.x += 0.03
+	// Mesh transformation setup
 	mesh.rotation.y += 0.03
-	// mesh.rotation.z += 0.03
+	mesh.translation.z = 5.0
+	mesh.translation.x += 0.01
+
+	scale := MatrixScale(mesh.scale)
+	rotationX := MatrixRotationX(mesh.rotation.x)
+	rotationY := MatrixRotationY(mesh.rotation.y)
+	rotationZ := MatrixRotationZ(mesh.rotation.z)
+	trans := MatrixTranslation(mesh.translation)
 
 	for _, triangle := range mesh.triangles {
 		var vertices [3]Vec3
 
 		// Transform
 		for i, vertex := range triangle.vertices {
-			// Rotate then move away from the camera (0,0,0)
-			vertex = rotate(vertex, mesh.rotation)
-			vertex.z += 5.0
+			vertex = scale.MulVec3(vertex)
+			vertex = rotationX.MulVec3(vertex)
+			vertex = rotationY.MulVec3(vertex)
+			vertex = rotationZ.MulVec3(vertex)
+			vertex = trans.MulVec3(vertex)
+
 			vertices[i] = vertex
 		}
 
@@ -137,11 +146,4 @@ func project(v Vec3) Vec2 {
 		x: (v.x * fov) / v.z,
 		y: (v.y * fov) / v.z,
 	}
-}
-
-func rotate(v, rotation Vec3) Vec3 {
-	rotated := rotate_x(v, rotation.x)
-	rotated = rotate_y(rotated, rotation.y)
-	rotated = rotate_z(rotated, rotation.z)
-	return rotated
 }

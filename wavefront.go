@@ -16,7 +16,7 @@ func NewMeshFromObj(objFilename string) Mesh {
 	}
 	defer objFile.Close()
 
-	mesh := Mesh{}
+	mesh := NewMesh()
 
 	vertices := []Vec3{}
 	scanner := bufio.NewScanner(objFile)

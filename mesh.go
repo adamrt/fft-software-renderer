@@ -2,7 +2,14 @@ package main
 
 type Mesh struct {
 	triangles []Triangle
-	rotation  Vec3
+
+	scale       Vec3
+	rotation    Vec3
+	translation Vec3
+}
+
+func NewMesh() Mesh {
+	return Mesh{scale: Vec3{1, 1, 1}}
 }
 
 type Triangle struct {
