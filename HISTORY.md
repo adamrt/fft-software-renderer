@@ -145,7 +145,20 @@ doesn't work as expected.
 **Notes**:
 - Vector subtractions returns a vector pointing to the first element.
 
-    `v := camera.position.Sub(someVector)`. v will point from someVetor to camera.
+  `v := camera.position.Sub(someVector)`. v will point from someVetor to camera.
+
+- The reason we need Vec4 and Mat4x4 instead of Vec3 and Mat3x3 is for two reasons.
+
+  1. Translation is not a linear transformation
+
+     Translation changes the origin, unlike scale and rotation (which
+     are linear transformations).
+
+  1. For perspective projection we can store the perspective divide
+     factor(?) in the w component.
+
+  I think we could use 3x3 if we only did scale and rotation.
+
 
 [1] Non-Free Link: [Inverted Vertical Screen Values](https://courses.pikuma.com/courses/take/learn-computer-graphics-programming/lessons/12296518-inverted-vertical-screen-values/discussions/5719619)
 

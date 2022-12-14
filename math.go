@@ -141,6 +141,26 @@ func MatrixIdentity() Matrix {
 	}
 }
 
+// Return the combination of Scale, Translation and Rotation matricies.  This is just a
+// helper function to clean up construction in the main Engine.update() method.
+//
+// Always scale, rotate then translate.
+func MatrixWorld(scale, rotation, translation Vec3) Matrix {
+	matScale := MatrixScale(scale)
+	matRX := MatrixRotationX(rotation.x)
+	matRY := MatrixRotationY(rotation.y)
+	matRZ := MatrixRotationZ(rotation.z)
+	matTrans := MatrixTranslation(translation)
+
+	world := MatrixIdentity()
+	world = matScale.Mul(world)
+	world = matRX.Mul(world)
+	world = matRY.Mul(world)
+	world = matRZ.Mul(world)
+	world = matTrans.Mul(world)
+	return world
+}
+
 // Return a Scale Matrix
 // | sx  0  0  0 |
 // |  0 sy  0  0 |

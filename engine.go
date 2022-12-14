@@ -67,25 +67,14 @@ func (e *Engine) update() {
 	// Mesh transformation setup
 	mesh.rotation.y += 0.03
 	mesh.translation.z = 5.0
-	mesh.translation.x += 0.01
 
-	scale := MatrixScale(mesh.scale)
-	rotationX := MatrixRotationX(mesh.rotation.x)
-	rotationY := MatrixRotationY(mesh.rotation.y)
-	rotationZ := MatrixRotationZ(mesh.rotation.z)
-	trans := MatrixTranslation(mesh.translation)
+	worldMatrix := MatrixWorld(mesh.scale, mesh.rotation, mesh.translation)
 
 	for _, triangle := range mesh.triangles {
-		var vertices [3]Vec3
-
 		// Transform
+		var vertices [3]Vec3
 		for i, vertex := range triangle.vertices {
-			vertex = scale.MulVec3(vertex)
-			vertex = rotationX.MulVec3(vertex)
-			vertex = rotationY.MulVec3(vertex)
-			vertex = rotationZ.MulVec3(vertex)
-			vertex = trans.MulVec3(vertex)
-
+			vertex = worldMatrix.MulVec3(vertex)
 			vertices[i] = vertex
 		}
 
