@@ -1,6 +1,8 @@
 package main
 
 import (
+	"math"
+
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -17,9 +19,10 @@ var (
 	// Timing
 	previous uint32 = 0
 
-	// arbitrary fov to scale the small points
-	fov            = 640.0
+	// For now the camera position is at 0,0,0 until we get a proper camera with a
+	// lookat() function and a view matrix.
 	cameraPosition = Vec3{0, 0, 0}
+	projMatrix     Matrix
 )
 
 type Engine struct {
@@ -38,6 +41,10 @@ func (e *Engine) loadObj(file string) {
 func (e *Engine) setup() {
 	e.isRunning = true
 	previous = sdl.GetTicks()
+
+	aspect := float64(e.window.height) / float64(e.window.width)
+	fov := math.Pi / 3.0 // (180/3 = 60 degrees). Value is in radians.
+	projMatrix = MatrixPerspective(fov, aspect, 0.1, 100.0)
 }
 
 func (e *Engine) processInput() {
@@ -66,13 +73,16 @@ func (e *Engine) update() {
 
 	// Mesh transformation setup
 	mesh.rotation.y += 0.03
+	// Temporary until we have a camera/view matrix
 	mesh.translation.z = 5.0
 
 	worldMatrix := MatrixWorld(mesh.scale, mesh.rotation, mesh.translation)
 
 	for _, triangle := range mesh.triangles {
-		// Transform
+
 		var vertices [3]Vec3
+
+		// Transform
 		for i, vertex := range triangle.vertices {
 			vertex = worldMatrix.MulVec3(vertex)
 			vertices[i] = vertex
@@ -84,7 +94,6 @@ func (e *Engine) update() {
 		normal := ab.Cross(ac).Normalize()
 		ray := cameraPosition.Sub(a)
 		visibility := normal.Dot(ray)
-
 		if visibility < 0.0 {
 			continue
 		}
@@ -92,18 +101,31 @@ func (e *Engine) update() {
 		// Projection
 		for i, vertex := range vertices {
 			// Project
-			point := project(vertex)
+			point := projMatrix.MulVec4(vertex.Vec4())
+			if point.w != 0.0 {
+				point.x /= point.w
+				point.y /= point.w
+				point.z /= point.w
+			}
 
 			// Invert the Y asis to compensate for the Y axis of the model and
 			// the color buffer being different (+Y up vs +Y down, respectively).
 			point.y *= -1
 
-			// Scale and translate to middle of screen
+			// Scale to the viewport
+			point.x *= float64(e.window.width / 2)
+			point.y *= float64(e.window.height / 2)
+
+			// Translate to center of screen
 			point.x += float64(e.window.width / 2)
 			point.y += float64(e.window.height / 2)
 
-			triangle.points[i] = point
+			triangle.points[i] = Vec2{
+				x: point.x,
+				y: point.y,
+			}
 		}
+
 		trianglesToRender = append(trianglesToRender, triangle)
 	}
 }
@@ -128,11 +150,4 @@ func (e *Engine) render() {
 
 	// Clear triangles from last frame
 	trianglesToRender = trianglesToRender[:0]
-}
-
-func project(v Vec3) Vec2 {
-	return Vec2{
-		x: (v.x * fov) / v.z,
-		y: (v.y * fov) / v.z,
-	}
 }

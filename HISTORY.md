@@ -81,6 +81,25 @@ of the ones I referred to the most.
   is memory usage is high.
 
 ## Daily Notes
+### 2022-12-15
+
+#### TODO:
+
+- [ ] Fix backface culling in orthographic projection.
+
+    Right now backface culling is working perfect in perspective
+    projection. But during orthographic, the normal or the camera ray
+    vector is incorrect or something similar. I'm not sure if there
+    are separate ways to handle ortho/perspective culling.
+
+    I considered ignoring this since we have so few triangles that
+    backface culling isn't that much of a performance improvement. But
+    then without understanding why its happening, whats the point of
+    continuing, more things would crop up down the line. Plus I think
+    in the original go engine I did, switching to orthographic
+    actually had this problem, now that I think about it.
+
+
 ### 2022-12-14
 
 Okay, after thinking about yesterdays problem for a while, I realized
@@ -127,14 +146,11 @@ where the `-sin` should go. _"The negated sine function always appears
 one row below and one column to the left, with wraparound, of the
 entry containing the one in the matrix."_ Thanks for that!
 
-
----
-
 **Results**:
 - Backface culling in perspective projection
 
   Orthographic culling isn't working correctly, but I think that
-  matricies might solve this.
+  matrices might solve this. **Update**: It didn't.
 
 Remaining issues today:
 
@@ -154,8 +170,8 @@ doesn't work as expected.
      Translation changes the origin, unlike scale and rotation (which
      are linear transformations).
 
-  1. For perspective projection we can store the perspective divide
-     factor(?) in the w component.
+  1. For perspective projection we can store the original z value for
+     perspective in the w component by placing `[3][2] = 1.0`.
 
   I think we could use 3x3 if we only did scale and rotation.
 

@@ -239,3 +239,29 @@ func MatrixRotationZ(angle float64) Matrix {
 		{0, 0, 0, 1},
 	}
 }
+
+// Return a Perspective Projection Matrix
+//
+// The 3/2==1 stores the original z value for use in MulProjection so we can do
+// perspective divide in MulVec4Proj().
+func MatrixPerspective(fov, aspect, znear, zfar float64) Matrix {
+	m := Matrix{}
+	m[0][0] = aspect * (1 / math.Tan(fov/2))
+	m[1][1] = 1 / math.Tan(fov/2)
+	m[2][2] = zfar / (zfar - znear)
+	m[2][3] = (-zfar * znear) / (zfar - znear)
+	m[3][2] = 1.0
+	return m
+}
+
+func MatrixOrtho(left, right, bottom, top, near, far float64) Matrix {
+	rml, tmb, fmn := (right - left), (top - bottom), (far - near)
+	m := MatrixIdentity()
+	m[0][0] = 2.0 / rml
+	m[1][1] = 2.0 / tmb
+	m[2][2] = -2.0 / fmn
+	m[3][0] = -(right + left) / rml
+	m[3][1] = -(top + bottom) / tmb
+	m[3][2] = -(far + near) / fmn
+	return m
+}
