@@ -146,19 +146,7 @@ where the `-sin` should go. _"The negated sine function always appears
 one row below and one column to the left, with wraparound, of the
 entry containing the one in the matrix."_ Thanks for that!
 
-**Results**:
-- Backface culling in perspective projection
-
-  Orthographic culling isn't working correctly, but I think that
-  matrices might solve this. **Update**: It didn't.
-
-Remaining issues today:
-
-**Orthographic backface culling**: When removing the perspective
-projection (which now is simply `x/z & y/z`) the backface culling
-doesn't work as expected.
-
-**Notes**:
+#### Notes
 - Vector subtractions returns a vector pointing to the first element.
 
   `v := camera.position.Sub(someVector)`. v will point from someVetor to camera.
@@ -177,6 +165,13 @@ doesn't work as expected.
 
 
 [1] Non-Free Link: [Inverted Vertical Screen Values](https://courses.pikuma.com/courses/take/learn-computer-graphics-programming/lessons/12296518-inverted-vertical-screen-values/discussions/5719619)
+
+
+#### Results
+- Backface culling in perspective projection
+
+  Orthographic culling isn't working correctly, but I think that
+  matrices might solve this. **Update**: It didn't.
 
 ### 2022-12-13
 
@@ -231,6 +226,10 @@ will be fixed, I don't think so but I might beable to understand it more.
   duplicating vertices isn't a big memory loss for now, and it makes
   the code easier to follow.
 
+#### Result
+
+None just researching
+
 ### 2022-12-12
 
 Today I ready through chapter 1 and part of 2 of [3D Math Primer for
@@ -252,11 +251,7 @@ to get a better understanding as I build out this engine.
 - Render vertex dots of triangles
 - Render lines of triangles (wireframe)
 
-**Result**:
-
-- Rotating 3D wireframe cube
-
-#### Mathmatical notes
+#### Notes
 
 My basic math skills are about 20 years old, so I'm taking notes I can
 refer back to.
@@ -328,6 +323,10 @@ if `i=1`, it would do 6 loops, `a1 + ... + a6`.
     - `sin(x)` is how high on the circle you are
 
 
+#### Result
+
+- Rotating 3D wireframe cube
+
 
 ### 2022-12-11
 
@@ -346,5 +345,7 @@ if `i=1`, it would do 6 loops, `a1 + ... + a6`.
 
 - Add fullscreen and windowed modes
 
-**Result**: Opening a window and fill with background and draw a
-pixel. Escape to quit.
+#### Result
+
+Opening a window and fill with background and draw a pixel. Escape to
+quit.
