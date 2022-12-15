@@ -1,6 +1,5 @@
 # Heretic Project History
 
-## Description
 This is a log of the development and learning process for Heretic.
 
 Once I realized you could extract level data from the original Final
@@ -29,7 +28,7 @@ without OpenGL.
 
 This is the journal of development.
 
-## Resources
+### Resources
 
 I used a million sources for learning 3D but I think these were some
 of the ones I referred to the most.
@@ -39,7 +38,7 @@ of the ones I referred to the most.
 - [Foundations of Game Engine Development: Volume 1](https://foundationsofgameenginedev.com/)
 - [Javidx9 3D Graphics Engine Series](https://www.youtube.com/watch?v=ih20l3pJoeU)
 
-## Design Decisions
+### Design Decisions
 
 - **Left-handed coordinates system**
 
@@ -80,10 +79,10 @@ of the ones I referred to the most.
   that the overhead is that much. This could be changed in the future
   is memory usage is high.
 
-## Daily Notes
-### 2022-12-15
+# Daily Notes
+## 2022-12-15
 
-#### TODO:
+### TODO:
 
 - [ ] Fix backface culling in orthographic projection.
 
@@ -100,7 +99,7 @@ of the ones I referred to the most.
     actually had this problem, now that I think about it.
 
 
-### 2022-12-14
+## 2022-12-14
 
 Okay, after thinking about yesterdays problem for a while, I realized
 that the option (#3) of inverting the Y-axis is the correct
@@ -146,7 +145,7 @@ where the `-sin` should go. _"The negated sine function always appears
 one row below and one column to the left, with wraparound, of the
 entry containing the one in the matrix."_ Thanks for that!
 
-#### Notes
+### Notes
 - Vector subtractions returns a vector pointing to the first element.
 
   `v := camera.position.Sub(someVector)`. v will point from someVetor to camera.
@@ -167,13 +166,15 @@ entry containing the one in the matrix."_ Thanks for that!
 [1] Non-Free Link: [Inverted Vertical Screen Values](https://courses.pikuma.com/courses/take/learn-computer-graphics-programming/lessons/12296518-inverted-vertical-screen-values/discussions/5719619)
 
 
-#### Results
+### Result
+- Scale, Rotation and Translation matrices (World Matrix)
+- Perspective projection
 - Backface culling in perspective projection
 
   Orthographic culling isn't working correctly, but I think that
   matrices might solve this. **Update**: It didn't.
 
-### 2022-12-13
+## 2022-12-13
 
 Last night and this morning I've been struggling with some fundamental
 issue that I think I've run into in all of my previous prototypes.
@@ -226,11 +227,11 @@ will be fixed, I don't think so but I might beable to understand it more.
   duplicating vertices isn't a big memory loss for now, and it makes
   the code easier to follow.
 
-#### Result
+### Result
 
 None just researching
 
-### 2022-12-12
+## 2022-12-12
 
 Today I ready through chapter 1 and part of 2 of [3D Math Primer for
 Graphics and Game
@@ -251,7 +252,7 @@ to get a better understanding as I build out this engine.
 - Render vertex dots of triangles
 - Render lines of triangles (wireframe)
 
-#### Notes
+### Notes
 
 My basic math skills are about 20 years old, so I'm taking notes I can
 refer back to.
@@ -323,12 +324,12 @@ if `i=1`, it would do 6 loops, `a1 + ... + a6`.
     - `sin(x)` is how high on the circle you are
 
 
-#### Result
+### Result
 
 - Rotating 3D wireframe cube
 
 
-### 2022-12-11
+## 2022-12-11
 
 - Add Window struct for wrapping the SDL_Window and SDL_Renderer.
 - Add Engine struct for holding a window and standard engine loop.
@@ -345,7 +346,7 @@ if `i=1`, it would do 6 loops, `a1 + ... + a6`.
 
 - Add fullscreen and windowed modes
 
-#### Result
+### Result
 
 Opening a window and fill with background and draw a pixel. Escape to
 quit.
