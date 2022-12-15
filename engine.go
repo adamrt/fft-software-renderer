@@ -45,6 +45,7 @@ func (e *Engine) setup() {
 	aspect := float64(e.window.height) / float64(e.window.width)
 	fov := math.Pi / 3.0 // (180/3 = 60 degrees). Value is in radians.
 	projMatrix = MatrixPerspective(fov, aspect, 0.1, 100.0)
+	projMatrix = MatrixOrtho(-5, 5, -5, 5, 1, 100)
 }
 
 func (e *Engine) processInput() {
@@ -72,57 +73,49 @@ func (e *Engine) update() {
 	previous = sdl.GetTicks()
 
 	// Mesh transformation setup
-	mesh.rotation.y += 0.03
+	mesh.rotation.x += 0.005
+	mesh.rotation.y += 0.005
 	// Temporary until we have a camera/view matrix
 	mesh.translation.z = 5.0
 
 	worldMatrix := MatrixWorld(mesh.scale, mesh.rotation, mesh.translation)
 
 	for _, triangle := range mesh.triangles {
-
 		var vertices [3]Vec3
-
-		// Transform
 		for i, vertex := range triangle.vertices {
+			// Transform
 			vertex = worldMatrix.MulVec3(vertex)
+
+			// Project
+			vertex := projMatrix.MulVec3(vertex)
+
+			// Invert the Y asis to compensate for the Y axis of the model and
+			// the color buffer being different (+Y up vs +Y down, respectively).
+			vertex.y *= -1
+
+			// Scale to the viewport
+			vertex.x *= float64(e.window.width / 2)
+			vertex.y *= float64(e.window.height / 2)
+
+			// Translate to center of screen
+			vertex.x += float64(e.window.width / 2)
+			vertex.y += float64(e.window.height / 2)
+
 			vertices[i] = vertex
 		}
 
 		// Backface culling
 		a, b, c := vertices[0], vertices[1], vertices[2]
-		ab, ac := b.Sub(a).Normalize(), c.Sub(a).Normalize()
-		normal := ab.Cross(ac).Normalize()
-		ray := cameraPosition.Sub(a)
-		visibility := normal.Dot(ray)
-		if visibility < 0.0 {
+		ab := b.Sub(a)
+		ac := c.Sub(a)
+		if sign := ac.x*ab.y - ab.x*ac.y; sign < 0 {
 			continue
 		}
 
-		// Projection
 		for i, vertex := range vertices {
-			// Project
-			point := projMatrix.MulVec4(vertex.Vec4())
-			if point.w != 0.0 {
-				point.x /= point.w
-				point.y /= point.w
-				point.z /= point.w
-			}
-
-			// Invert the Y asis to compensate for the Y axis of the model and
-			// the color buffer being different (+Y up vs +Y down, respectively).
-			point.y *= -1
-
-			// Scale to the viewport
-			point.x *= float64(e.window.width / 2)
-			point.y *= float64(e.window.height / 2)
-
-			// Translate to center of screen
-			point.x += float64(e.window.width / 2)
-			point.y += float64(e.window.height / 2)
-
 			triangle.points[i] = Vec2{
-				x: point.x,
-				y: point.y,
+				x: vertex.x,
+				y: vertex.y,
 			}
 		}
 

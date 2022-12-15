@@ -1,8 +1,8 @@
 package main
 
 const (
-	windowWidth  = 1280
-	windowHeight = 720
+	windowWidth  = 800
+	windowHeight = 800
 )
 
 func main() {

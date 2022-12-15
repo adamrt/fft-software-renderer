@@ -84,21 +84,6 @@ of the ones I referred to the most.
 
 ### TODO:
 
-- [ ] Fix backface culling in orthographic projection.
-
-    Right now backface culling is working perfect in perspective
-    projection. But during orthographic, the normal or the camera ray
-    vector is incorrect or something similar. I'm not sure if there
-    are separate ways to handle ortho/perspective culling.
-
-    I considered ignoring this since we have so few triangles that
-    backface culling isn't that much of a performance improvement. But
-    then without understanding why its happening, whats the point of
-    continuing, more things would crop up down the line. Plus I think
-    in the original go engine I did, switching to orthographic
-    actually had this problem, now that I think about it.
-
-
 ## 2022-12-14
 
 Okay, after thinking about yesterdays problem for a while, I realized
@@ -144,6 +129,42 @@ from [Foundations of Game Engine Development: Volume
 where the `-sin` should go. _"The negated sine function always appears
 one row below and one column to the left, with wraparound, of the
 entry containing the one in the matrix."_ Thanks for that!
+
+### Backface culling
+
+- [x] Fix backface culling in orthographic projection.
+
+    Right now backface culling is working perfect in perspective
+    projection. But during orthographic, the normal or the camera ray
+    vector is incorrect or something similar. I'm not sure if there
+    are separate ways to handle ortho/perspective culling.
+
+    I considered ignoring this since we have so few triangles that
+    backface culling isn't that much of a performance improvement. But
+    then without understanding why its happening, whats the point of
+    continuing, more things would crop up down the line. Plus I think
+    in the original go engine I did, switching to orthographic
+    actually had this problem, now that I think about it.
+
+    **Update**: Okay so I found an entirely new way to do backface
+    culling in addition to why our current way wasn't working.
+
+    [Stack Overflow Question](https://gamedev.stackexchange.com/questions/203694/is-backface-culling-affected-by-differently-between-orthographic-and-perspective)
+
+    1. My orthographic issue was because I was pointing from the
+       camera position instead of the camera direction. Since
+       orthographic has no visible angle the same was as perspective,
+       the camera position wouldn't angle correctly.
+
+    1. The above doesn't really matter because I now have a better way
+       to do culling by checking the triangle winding order _after
+       projection_. It so much cheaper to compute and simplifies the
+       code massivly.
+
+
+More to say here but gotta bail.
+
+
 
 ### Notes
 - Vector subtractions returns a vector pointing to the first element.
