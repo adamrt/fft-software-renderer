@@ -1,5 +1,7 @@
 package main
 
+import "math/rand"
+
 var (
 	Transparent = Color{0, 0, 0, 0}
 
@@ -19,4 +21,13 @@ var (
 
 type Color struct {
 	R, G, B, A uint8
+}
+
+func randColor() Color {
+	return Color{
+		R: uint8(rand.Intn(256)),
+		G: uint8(rand.Intn(256)),
+		B: uint8(rand.Intn(256)),
+		A: 255,
+	}
 }
