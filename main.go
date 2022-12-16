@@ -1,8 +1,8 @@
 package main
 
 const (
-	windowWidth  = 800
-	windowHeight = 800
+	windowWidth  = 1024
+	windowHeight = 1024
 )
 
 func main() {
@@ -12,7 +12,7 @@ func main() {
 	renderer := NewRenderer(window)
 	engine := NewEngine(window, renderer)
 
-	engine.loadObj("cube.obj")
+	engine.loadObj("assets/f22.obj")
 	engine.setup()
 	for engine.isRunning {
 		engine.processInput()

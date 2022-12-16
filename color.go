@@ -8,10 +8,13 @@ var (
 	LightGray = Color{38, 38, 38, 255}
 	DarkGray  = Color{36, 36, 36, 255}
 
-	Red    = Color{255, 0, 0, 255}
-	Green  = Color{0, 255, 0, 255}
-	Blue   = Color{0, 0, 255, 255}
-	Yellow = Color{255, 255, 0, 255}
+	Red   = Color{255, 0, 0, 255}
+	Green = Color{0, 255, 0, 255}
+	Blue  = Color{0, 0, 255, 255}
+
+	Yellow  = Color{255, 255, 0, 255}
+	Magenta = Color{255, 0, 255, 255}
+	Cyan    = Color{0, 255, 255, 255}
 )
 
 type Color struct {

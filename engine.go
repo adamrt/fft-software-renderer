@@ -45,7 +45,7 @@ func (e *Engine) setup() {
 	aspect := float64(e.window.height) / float64(e.window.width)
 	fov := math.Pi / 3.0 // (180/3 = 60 degrees). Value is in radians.
 	projMatrix = MatrixPerspective(fov, aspect, 0.1, 100.0)
-	projMatrix = MatrixOrtho(-5, 5, -5, 5, 1, 100)
+	projMatrix = MatrixOrtho(-3, 3, -3, 3, 1, 100)
 }
 
 func (e *Engine) processInput() {
@@ -74,7 +74,7 @@ func (e *Engine) update() {
 
 	// Mesh transformation setup
 	mesh.rotation.x += 0.005
-	mesh.rotation.y += 0.005
+	// mesh.rotation.y += 0.005
 	// Temporary until we have a camera/view matrix
 	mesh.translation.z = 5.0
 
@@ -104,7 +104,9 @@ func (e *Engine) update() {
 			vertices[i] = vertex
 		}
 
-		// Backface culling
+		// Backface culling This works by checking the winding order of the
+		// projected triangle. If its CCW then you can ignore this triangle since
+		// it would be back-facing.
 		a, b, c := vertices[0], vertices[1], vertices[2]
 		ab := b.Sub(a)
 		ac := c.Sub(a)
