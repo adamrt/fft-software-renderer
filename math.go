@@ -233,7 +233,7 @@ func MatrixRotationZ(angle float64) Matrix {
 	s := math.Sin(angle)
 
 	return Matrix{
-		{c, -s, s, 0},
+		{c, -s, 0, 0},
 		{s, c, 0, 0},
 		{0, 0, 1, 0},
 		{0, 0, 0, 1},
