@@ -110,7 +110,7 @@ func (e *Engine) update() {
 		a, b, c := vertices[0], vertices[1], vertices[2]
 		ab := b.Sub(a)
 		ac := c.Sub(a)
-		if sign := ac.x*ab.y - ab.x*ac.y; sign < 0 {
+		if sign := ab.x*ac.y - ac.x*ab.y; sign < 0 {
 			continue
 		}
 
