@@ -2,6 +2,7 @@ package main
 
 import (
 	"math"
+	"sort"
 
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -87,7 +88,7 @@ func (e *Engine) update() {
 			vertex = worldMatrix.MulVec3(vertex)
 
 			// Project
-			vertex := projMatrix.MulVec3(vertex)
+			vertex = projMatrix.MulVec3(vertex)
 
 			// Invert the Y asis to compensate for the Y axis of the model and
 			// the color buffer being different (+Y up vs +Y down, respectively).
@@ -114,6 +115,8 @@ func (e *Engine) update() {
 			continue
 		}
 
+		triangle.avgDepth = (a.z + b.z + c.z) / 3.0
+
 		for i, vertex := range vertices {
 			triangle.points[i] = Vec2{
 				x: vertex.x,
@@ -123,6 +126,15 @@ func (e *Engine) update() {
 
 		trianglesToRender = append(trianglesToRender, triangle)
 	}
+
+	// Painters algorithm. Sort the projected triangles so the ones further away are
+	// rendered first. This is based on the average of a triangles vertices so there
+	// are visual issues. A depth buffer will solve this issue.
+	sort.Slice(trianglesToRender, func(i, j int) bool {
+		// This logic seems reverse but it is not. We want larger average depth
+		// values first.
+		return trianglesToRender[i].avgDepth < trianglesToRender[j].avgDepth
+	})
 }
 
 func (e *Engine) render() {
