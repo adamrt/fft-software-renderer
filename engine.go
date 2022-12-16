@@ -130,9 +130,8 @@ func (e *Engine) render() {
 	for _, t := range trianglesToRender {
 		// Draw triangles
 		a, b, c := t.points[0], t.points[1], t.points[2]
-		e.renderer.DrawLine(int(a.x), int(a.y), int(b.x), int(b.y), White)
-		e.renderer.DrawLine(int(b.x), int(b.y), int(c.x), int(c.y), White)
-		e.renderer.DrawLine(int(c.x), int(c.y), int(a.x), int(a.y), White)
+		e.renderer.DrawFilledTriangle(int(a.x), int(a.y), int(b.x), int(b.y), int(c.x), int(c.y), White)
+		e.renderer.DrawTriangle(int(a.x), int(a.y), int(b.x), int(b.y), int(c.x), int(c.y), Black)
 
 		// Draw vertices
 		// e.renderer.DrawRect(int(a.x)-2, int(a.y)-2, 4, 4, Red)
