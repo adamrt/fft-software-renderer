@@ -43,13 +43,6 @@ func NewMeshFromObj(objFilename string) Mesh {
 				}
 
 				// Append Face
-				mesh.triangles = append(mesh.triangles, Triangle{
-					vertices: [3]Vec3{
-						vertices[vertex_indices[0]-1],
-						vertices[vertex_indices[1]-1],
-						vertices[vertex_indices[2]-1],
-					},
-				})
 			} else {
 				matches, err := fmt.Fscanf(f, "f %d/%d/%d %d/%d/%d %d/%d/%d",
 					&vertex_indices[0], &texture_indices[0], &normal_indices[0],
@@ -59,15 +52,17 @@ func NewMeshFromObj(objFilename string) Mesh {
 				if err != nil || matches != 9 {
 					log.Fatalf("face: only %d matches on line %q\n", matches, line)
 				}
-				mesh.triangles = append(mesh.triangles, Triangle{
-					vertices: [3]Vec3{
-						vertices[vertex_indices[0]-1],
-						vertices[vertex_indices[1]-1],
-						vertices[vertex_indices[2]-1],
-					},
-				})
 			}
 
+			triangle := Triangle{
+				color: White,
+				vertices: [3]Vec3{
+					vertices[vertex_indices[0]-1],
+					vertices[vertex_indices[1]-1],
+					vertices[vertex_indices[2]-1],
+				},
+			}
+			mesh.triangles = append(mesh.triangles, triangle)
 		}
 	}
 

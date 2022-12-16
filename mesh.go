@@ -15,4 +15,5 @@ func NewMesh() Mesh {
 type Triangle struct {
 	vertices [3]Vec3
 	points   [3]Vec2
+	color    Color
 }

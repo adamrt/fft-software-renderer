@@ -44,3 +44,81 @@ func (r *Renderer) DrawLine(x0, y0, x1, y1 int, color Color) {
 		currentY += incY
 	}
 }
+
+func (r *Renderer) DrawTriangle(ax, ay, bx, by, cx, cy int, color Color) {
+	r.DrawLine(int(ax), int(ay), int(bx), int(by), color)
+	r.DrawLine(int(bx), int(by), int(cx), int(cy), color)
+	r.DrawLine(int(cx), int(cy), int(ax), int(ay), color)
+
+}
+
+// Draw a filled triangle with the flat-top/flat-bottom method
+func (r *Renderer) DrawFilledTriangle(ax, ay, bx, by, cx, cy int, color Color) {
+	// We need to sort the vertices by y-coordinate ascending (y0 < y1 < y2)
+	if ay > by {
+		ay, by = by, ay
+		ax, bx = bx, ax
+	}
+	if by > cy {
+		by, cy = cy, by
+		bx, cx = cx, bx
+	}
+	if ay > by {
+		ay, by = by, ay
+		ax, bx = bx, ax
+	}
+
+	if by == cy {
+		// Draw flat-bottom triangle
+		r.fillFlatBottomTriangle(ax, ay, bx, by, cx, cy, color)
+	} else if ay == by {
+		// Draw flat-top triangle
+		r.fillFlatTopTriangle(ax, ay, bx, by, cx, cy, color)
+	} else {
+		// Calculate the new vertex (Mx,My) using triangle similarity
+		My := by
+		Mx := (((cx - ax) * (by - ay)) / (cy - ay)) + ax
+
+		// Draw flat-bottom triangle
+		r.fillFlatBottomTriangle(ax, ay, bx, by, Mx, My, color)
+
+		// Draw flat-top triangle
+		r.fillFlatTopTriangle(bx, by, Mx, My, cx, cy, color)
+	}
+}
+
+// Draw a filled a triangle with a flat bottom
+func (r *Renderer) fillFlatBottomTriangle(ax, ay, bx, by, cx, cy int, color Color) {
+	// Find the two slopes (two triangle legs)
+	invSlope1 := float64(bx-ax) / float64(by-ay)
+	invSlope2 := float64(cx-ax) / float64(cy-ay)
+
+	// Start xStart and xEnd from the top vertex (x0,y0)
+	xStart := float64(ax)
+	xEnd := float64(ax)
+
+	// Loop all the scanlines from top to bottom
+	for y := ay; y <= cy; y++ {
+		r.DrawLine(int(xStart), y, int(xEnd), y, color)
+		xStart += invSlope1
+		xEnd += invSlope2
+	}
+}
+
+// Draw a filled a triangle with a flat top
+func (r *Renderer) fillFlatTopTriangle(ax, ay, bx, by, cx, cy int, color Color) {
+	// Find the two slopes (two triangle legs)
+	invSlope1 := float64(cx-ax) / float64(cy-ay)
+	invSlope2 := float64(cx-bx) / float64(cy-by)
+
+	// Start xStart and xEnd from the bottom vertex (x2,y2)
+	xStart := float64(cx)
+	xEnd := float64(cx)
+
+	// Loop all the scanlines from bottom to top
+	for y := cy; y >= ay; y-- {
+		r.DrawLine(int(xStart), y, int(xEnd), y, color)
+		xStart -= invSlope1
+		xEnd -= invSlope2
+	}
+}
