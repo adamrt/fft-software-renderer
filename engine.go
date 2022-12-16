@@ -24,6 +24,8 @@ var (
 	// lookat() function and a view matrix.
 	cameraPosition = Vec3{0, 0, 0}
 	projMatrix     Matrix
+
+	light Light
 )
 
 type Engine struct {
@@ -47,6 +49,8 @@ func (e *Engine) setup() {
 	fov := math.Pi / 3.0 // (180/3 = 60 degrees). Value is in radians.
 	projMatrix = MatrixPerspective(fov, aspect, 0.1, 100.0)
 	projMatrix = MatrixOrtho(-3, 3, -3, 3, 1, 100)
+
+	light = NewLight(Vec3{0, 0, 1})
 }
 
 func (e *Engine) processInput() {
@@ -75,7 +79,8 @@ func (e *Engine) update() {
 
 	// Mesh transformation setup
 	mesh.rotation.x += 0.005
-	// mesh.rotation.y += 0.005
+	mesh.rotation.y += 0.005
+	mesh.rotation.z += 0.005
 	// Temporary until we have a camera/view matrix
 	mesh.translation.z = 5.0
 
@@ -83,11 +88,21 @@ func (e *Engine) update() {
 
 	for _, triangle := range mesh.triangles {
 		var vertices [3]Vec3
-		for i, vertex := range triangle.vertices {
-			// Transform
-			vertex = worldMatrix.MulVec3(vertex)
 
-			// Project
+		// Transform vertices with World Matrix
+		for i, vertex := range triangle.vertices {
+			vertices[i] = worldMatrix.MulVec3(vertex)
+		}
+
+		// Calculate light before projection
+		a, b, c := vertices[0], vertices[1], vertices[2]
+		ab, ac := b.Sub(a), c.Sub(a)
+		normal := ab.Cross(ac).Normalize()
+		lightIntensity := -normal.Dot(light.direction)
+		triangle.color = triangle.color.Mul(lightIntensity)
+
+		for i, vertex := range vertices {
+			// Projection
 			vertex = projMatrix.MulVec3(vertex)
 
 			// Invert the Y asis to compensate for the Y axis of the model and
@@ -105,13 +120,7 @@ func (e *Engine) update() {
 			vertices[i] = vertex
 		}
 
-		// Backface culling This works by checking the winding order of the
-		// projected triangle. If its CCW then you can ignore this triangle since
-		// it would be back-facing.
-		a, b, c := vertices[0], vertices[1], vertices[2]
-		ab := b.Sub(a)
-		ac := c.Sub(a)
-		if sign := ab.x*ac.y - ac.x*ab.y; sign < 0 {
+		if shouldCull(vertices) {
 			continue
 		}
 
@@ -143,7 +152,7 @@ func (e *Engine) render() {
 		// Draw triangles
 		a, b, c := t.points[0], t.points[1], t.points[2]
 		e.renderer.DrawFilledTriangle(int(a.x), int(a.y), int(b.x), int(b.y), int(c.x), int(c.y), t.color)
-		e.renderer.DrawTriangle(int(a.x), int(a.y), int(b.x), int(b.y), int(c.x), int(c.y), Black)
+		// e.renderer.DrawTriangle(int(a.x), int(a.y), int(b.x), int(b.y), int(c.x), int(c.y), Black)
 
 		// Draw vertices
 		// e.renderer.DrawRect(int(a.x)-2, int(a.y)-2, 4, 4, Red)
@@ -156,4 +165,21 @@ func (e *Engine) render() {
 
 	// Clear triangles from last frame
 	trianglesToRender = trianglesToRender[:0]
+}
+
+// Backface culling
+//
+// This works by checking the winding order of the projected triangle.
+// If its CCW then you can ignore this triangle since it would be back-facing.
+//
+// NOTE: This method must be done after projection vertices.
+func shouldCull(vertices [3]Vec3) bool {
+	a, b, c := vertices[0], vertices[1], vertices[2]
+	ab, ac := b.Sub(a), c.Sub(a)
+
+	if sign := ab.x*ac.y - ac.x*ab.y; sign < 0 {
+		return true
+	}
+
+	return false
 }

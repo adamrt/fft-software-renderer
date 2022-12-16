@@ -12,7 +12,7 @@ func main() {
 	renderer := NewRenderer(window)
 	engine := NewEngine(window, renderer)
 
-	engine.loadObj("assets/f22.obj")
+	engine.loadObj("assets/cube.obj")
 	engine.setup()
 	for engine.isRunning {
 		engine.processInput()

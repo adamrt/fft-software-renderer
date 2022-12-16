@@ -80,9 +80,53 @@ of the ones I referred to the most.
   is memory usage is high.
 
 # Daily Notes
+## 2022-12-16
+
+Today I started rasterizing triangles (filling them). This uses the
+flat-top, flat-bottom technique that splits the triangle in two (if
+necessary) so there can be two separate triangles. One with a flat-top
+and a flat-bottom.
+
+I basically copied Gustavo's code for this. I find this bit
+uninteresting for now and understand how it works. There are faster
+algorithms, but I don't care for now. I'll be using textures for most
+faces anyway.
+
+Painters algorithm was used to help with triangle depth ordering. Its
+a naive approach for depth sorting, but we don't have (any may not
+need) a depth buffer.
+
+I added simple lighting as well. I thought it wasn't working because
+my dot products were so close to 1.0 (.9999123) that the color wasn't
+changing. This was because I was using the dot product on the vertices
+after projection instead of before. The dp needs to be calculated on
+the _transformed_ vertices, before they are projected.
+
+I found a bug in the MatrixRotationZ code. It was just a typo when I
+set it up. The z rotation was noticably off once I was looking at a
+cube.
+
+There was also a bug in the backface culling code. I had originally
+switching the order of the forumla thinking that I was compensating
+for CW/CCW winding orders, but it turned out to already be correct the
+way it was in the Stack Overflow answer.
+
+
+### Results
+
+- Backface culling
+- Triangle rasterization (filling triangles)
+- Painters algorithm
+- Simple lighting
+
+
 ## 2022-12-15
 
-### TODO:
+Implemented the new backface culling technique. Its so simple that I
+really like it. You do have to do the calculation _after_ projection
+so you don't get to short circuit the projection math, but I think
+that is fine since the actual calculation is lighter than the previous
+dot product method.
 
 ## 2022-12-14
 
@@ -161,8 +205,9 @@ entry containing the one in the matrix."_ Thanks for that!
        projection_. It so much cheaper to compute and simplifies the
        code massivly.
 
-
 More to say here but gotta bail.
+
+
 
 
 
