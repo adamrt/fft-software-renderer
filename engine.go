@@ -14,6 +14,9 @@ const (
 
 // Data
 var (
+	autorotate  = false
+	perspective = false
+
 	trianglesToRender = []Triangle{}
 	mesh              = Mesh{}
 
@@ -21,9 +24,6 @@ var (
 	previous uint32
 	delta    float64
 
-	// For now the camera position is at 0,0,0 until we get a proper camera with a
-	// lookat() function and a view matrix.
-	cameraPosition = Vec3{0, 0, 0}
 	projMatrix     Matrix
 
 	light DirectionalLight
@@ -48,8 +48,10 @@ func (e *Engine) setup() {
 
 	aspect := float64(e.window.height) / float64(e.window.width)
 	fov := math.Pi / 3.0 // (180/3 = 60 degrees). Value is in radians.
-	projMatrix = MatrixPerspective(fov, aspect, 0.1, 100.0)
 	projMatrix = MatrixOrtho(-3, 3, -3, 3, 1, 100)
+	if perspective {
+		projMatrix = MatrixPerspective(fov, aspect, 1.0, 100.0)
+	}
 
 	light = NewDirectionLight(Vec3{0, 0, 1})
 }
@@ -66,6 +68,11 @@ func (e *Engine) processInput() {
 			switch t.Keysym.Sym {
 			case sdl.K_ESCAPE:
 				e.isRunning = false
+			case sdl.K_SPACE:
+				autorotate = !autorotate
+			case sdl.K_p:
+				e.changePerspective()
+			}
 			}
 		}
 	}
@@ -79,12 +86,15 @@ func (e *Engine) update() {
 	delta = float64(sdl.GetTicks()-previous) / 1000.0
 	previous = sdl.GetTicks()
 
-	// Mesh transformation setup
-	mesh.rotation.x += 0.005
-	mesh.rotation.y += 0.005
-	mesh.rotation.z += 0.005
+	if autorotate {
+		// Mesh transformation setup
+		// mesh.rotation.x += 0.005
+		mesh.rotation.y += 0.01
+		// mesh.rotation.z += 0.005
+	}
+
 	// Temporary until we have a camera/view matrix
-	mesh.translation.z = 5.0
+	// mesh.translation.z = 2.0
 
 	worldMatrix := MatrixWorld(mesh.scale, mesh.rotation, mesh.translation)
 
@@ -105,7 +115,13 @@ func (e *Engine) update() {
 
 		for i, vertex := range vertices {
 			// Projection
-			vertex = projMatrix.MulVec3(vertex)
+			vertex := projMatrix.MulVec4(vertex.Vec4())
+
+			if perspective && vertex.w != 0 {
+				vertex.x /= vertex.w
+				vertex.y /= vertex.w
+				vertex.z /= vertex.w
+			}
 
 			// Invert the Y asis to compensate for the Y axis of the model and
 			// the color buffer being different (+Y up vs +Y down, respectively).
@@ -167,6 +183,17 @@ func (e *Engine) render() {
 
 	// Clear triangles from last frame
 	trianglesToRender = trianglesToRender[:0]
+}
+
+func (e *Engine) changePerspective() {
+	perspective = !perspective
+	if perspective {
+		mesh.scale = Vec3{1, 1, 1}
+	} else {
+		mesh.scale = Vec3{3, 3, 3}
+	}
+	e.setup()
+
 }
 
 // Backface culling

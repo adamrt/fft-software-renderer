@@ -1,15 +1,15 @@
 package main
 
 type DirectionalLight struct {
-	Direction Vec3
-	Position  Vec3
-	Color     Color
+	direction Vec3
+	position  Vec3
+	color     Color
 }
 
 func NewDirectionLight(direction Vec3) DirectionalLight {
-	return DirectionalLight{Direction: direction}
+	return DirectionalLight{direction: direction}
 }
 
 type AmbientLight struct {
-	Color Color
+	color Color
 }
