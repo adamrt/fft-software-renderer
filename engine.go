@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	FPS        = 60
+	FPS        = 30
 	MSPerFrame = (1000 / FPS)
 )
 
@@ -18,7 +18,8 @@ var (
 	mesh              = Mesh{}
 
 	// Timing
-	previous uint32 = 0
+	previous uint32
+	delta    float64
 
 	// For now the camera position is at 0,0,0 until we get a proper camera with a
 	// lookat() function and a view matrix.
@@ -75,6 +76,7 @@ func (e *Engine) update() {
 	if wait := MSPerFrame - (sdl.GetTicks() - previous); wait > 0 && wait <= MSPerFrame {
 		sdl.Delay(wait)
 	}
+	delta = float64(sdl.GetTicks()-previous) / 1000.0
 	previous = sdl.GetTicks()
 
 	// Mesh transformation setup
