@@ -113,35 +113,35 @@ func (r *Renderer) DrawTexturedTriangle(
 	}
 
 	// Create vector points and texture coords after we sort the vertices
-	point_a := Vec2{float64(ax), float64(ay)}
-	point_b := Vec2{float64(bx), float64(by)}
-	point_c := Vec2{float64(cx), float64(cy)}
+	a := Vec2{float64(ax), float64(ay)}
+	b := Vec2{float64(bx), float64(by)}
+	c := Vec2{float64(cx), float64(cy)}
 
 	//
 	// Render the upper part of the triangle (flat-bottom)
 	//
-	inv_slope_1 := 0.0
-	inv_slope_2 := 0.0
+	invSlope1 := 0.0
+	invSlope2 := 0.0
 
 	if by-ay != 0 {
-		inv_slope_1 = float64(bx-ax) / float64(abs(by-ay))
+		invSlope1 = float64(bx-ax) / float64(abs(by-ay))
 	}
 	if cy-ay != 0 {
-		inv_slope_2 = float64(cx-ax) / float64(abs(cy-ay))
+		invSlope2 = float64(cx-ax) / float64(abs(cy-ay))
 	}
 
 	if by-ay != 0 {
 		for y := ay; y <= by; y++ {
-			var x_start int = bx + int(float64(y-by)*inv_slope_1)
-			var x_end int = ax + int(float64(y-ay)*inv_slope_2)
+			var xStart int = bx + int(float64(y-by)*invSlope1)
+			var xEnd int = ax + int(float64(y-ay)*invSlope2)
 
-			if x_end < x_start {
-				x_start, x_end = x_end, x_start // swap if x_start is to the right of x_end
+			if xEnd < xStart {
+				xStart, xEnd = xEnd, xStart // swap if xStart is to the right of xEnd
 			}
 
-			for x := x_start; x < x_end; x++ {
+			for x := xStart; x < xEnd; x++ {
 				// Draw our pixel with the color that comes from the texture
-				r.drawTexel(x, y, texture, palette, point_a, point_b, point_c, au, av, bu, bv, cu, cv)
+				r.drawTexel(x, y, texture, palette, a, b, c, au, av, bu, bv, cu, cv)
 			}
 		}
 	}
@@ -149,28 +149,28 @@ func (r *Renderer) DrawTexturedTriangle(
 	//
 	// Render the bottom part of the triangle (flat-top)
 	//
-	inv_slope_1 = 0.0
-	inv_slope_2 = 0.0
+	invSlope1 = 0.0
+	invSlope2 = 0.0
 
 	if cy-by != 0 {
-		inv_slope_1 = float64(cx-bx) / float64(abs(cy-by))
+		invSlope1 = float64(cx-bx) / float64(abs(cy-by))
 	}
 	if cy-ay != 0 {
-		inv_slope_2 = float64(cx-ax) / float64(abs(cy-ay))
+		invSlope2 = float64(cx-ax) / float64(abs(cy-ay))
 	}
 
 	if cy-by != 0 {
 		for y := by; y <= cy; y++ {
-			var x_start int = bx + int(float64(y-by)*inv_slope_1)
-			var x_end int = ax + int(float64(y-ay)*inv_slope_2)
+			var xStart int = bx + int(float64(y-by)*invSlope1)
+			var xEnd int = ax + int(float64(y-ay)*invSlope2)
 
-			if x_end < x_start {
-				x_start, x_end = x_end, x_start // swap if x_start is to the right of x_end
+			if xEnd < xStart {
+				xStart, xEnd = xEnd, xStart // swap if xStart is to the right of xEnd
 			}
 
-			for x := x_start; x < x_end; x++ {
+			for x := xStart; x < xEnd; x++ {
 				// Draw our pixel with the color that comes from the texture
-				r.drawTexel(x, y, texture, palette, point_a, point_b, point_c, au, av, bu, bv, cu, cv)
+				r.drawTexel(x, y, texture, palette, a, b, c, au, av, bu, bv, cu, cv)
 			}
 		}
 	}
@@ -213,27 +213,27 @@ func (r *Renderer) fillFlatTopTriangle(ax, ay, bx, by, cx, cy int, color Color) 
 func (r *Renderer) drawTexel(
 	x, y int,
 	texture Texture, palette Palette,
-	point_a, point_b, point_c Vec2,
+	a, b, c Vec2,
 	au, av, bu, bv, cu, cv float64,
 ) {
-	point_p := Vec2{float64(x), float64(y)}
-	weights := barycentricWeights(point_a, point_b, point_c, point_p)
+	p := Vec2{float64(x), float64(y)}
+	weights := barycentricWeights(a, b, c, p)
 
 	alpha := weights.x
 	beta := weights.y
 	gamma := weights.z
 
 	// Perform the interpolation of all U and V values using barycentric weights
-	interpolated_u := (au)*alpha + (bu)*beta + (cu)*gamma
-	interpolated_v := (av)*alpha + (bv)*beta + (cv)*gamma
+	interpolatedU := (au)*alpha + (bu)*beta + (cu)*gamma
+	interpolatedV := (av)*alpha + (bv)*beta + (cv)*gamma
 
 	// Map the UV coordinate to the full texture width and height
-	tex_x := abs(int(interpolated_u * float64(texture.width)))
-	tex_y := abs(int(interpolated_v * float64(texture.height)))
+	texX := abs(int(interpolatedU * float64(texture.width)))
+	texY := abs(int(interpolatedV * float64(texture.height)))
 
-	idx := (texture.width * tex_y) + tex_x
+	idx := (texture.width * texY) + texX
 	if idx >= 0 && idx < textureLen {
-		textureColor := texture.data[(tex_y*texture.width)+tex_x]
+		textureColor := texture.data[(texY*texture.width)+texX]
 		// If there is a palette, the current color components will
 		// represent the index into the palette.
 		if palette != nil {

@@ -31,13 +31,13 @@ func NewMeshFromObj(objFilename string) Mesh {
 			}
 			vertices = append(vertices, v)
 		case strings.HasPrefix(line, "f "):
-			var vertex_indices [3]int
-			var normal_indices [3]int
-			var texture_indices [3]int
+			var vertexIndices [3]int
+			var normalIndices [3]int
+			var textureIndices [3]int
 			f := strings.NewReader(line)
 
 			if !strings.Contains(line, "/") {
-				matches, err := fmt.Fscanf(f, "f %d %d %d", &vertex_indices[0], &vertex_indices[1], &vertex_indices[2])
+				matches, err := fmt.Fscanf(f, "f %d %d %d", &vertexIndices[0], &vertexIndices[1], &vertexIndices[2])
 				if err != nil || matches != 3 {
 					log.Fatalf("face: only %d matches on line %q\n", matches, line)
 				}
@@ -45,9 +45,9 @@ func NewMeshFromObj(objFilename string) Mesh {
 				// Append Face
 			} else {
 				matches, err := fmt.Fscanf(f, "f %d/%d/%d %d/%d/%d %d/%d/%d",
-					&vertex_indices[0], &texture_indices[0], &normal_indices[0],
-					&vertex_indices[1], &texture_indices[1], &normal_indices[1],
-					&vertex_indices[2], &texture_indices[2], &normal_indices[2],
+					&vertexIndices[0], &textureIndices[0], &normalIndices[0],
+					&vertexIndices[1], &textureIndices[1], &normalIndices[1],
+					&vertexIndices[2], &textureIndices[2], &normalIndices[2],
 				)
 				if err != nil || matches != 9 {
 					log.Fatalf("face: only %d matches on line %q\n", matches, line)
@@ -57,9 +57,9 @@ func NewMeshFromObj(objFilename string) Mesh {
 			triangle := Triangle{
 				color: White,
 				vertices: [3]Vec3{
-					vertices[vertex_indices[0]-1],
-					vertices[vertex_indices[1]-1],
-					vertices[vertex_indices[2]-1],
+					vertices[vertexIndices[0]-1],
+					vertices[vertexIndices[1]-1],
+					vertices[vertexIndices[2]-1],
 				},
 			}
 			mesh.triangles = append(mesh.triangles, triangle)
