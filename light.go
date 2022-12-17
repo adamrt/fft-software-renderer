@@ -1,9 +1,11 @@
 package main
 
-type Light struct {
-	direction Vec3
+type DirectionalLight struct {
+	Direction Vec3
+	Position  Vec3
+	Color     Color
 }
 
-func NewLight(direction Vec3) Light {
-	return Light{direction: direction}
+func NewDirectionLight(direction Vec3) DirectionalLight {
+	return DirectionalLight{Direction: direction}
 }

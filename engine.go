@@ -25,7 +25,7 @@ var (
 	cameraPosition = Vec3{0, 0, 0}
 	projMatrix     Matrix
 
-	light Light
+	light DirectionalLight
 )
 
 type Engine struct {
@@ -50,7 +50,7 @@ func (e *Engine) setup() {
 	projMatrix = MatrixPerspective(fov, aspect, 0.1, 100.0)
 	projMatrix = MatrixOrtho(-3, 3, -3, 3, 1, 100)
 
-	light = NewLight(Vec3{0, 0, 1})
+	light = NewDirectionLight(Vec3{0, 0, 1})
 }
 
 func (e *Engine) processInput() {
