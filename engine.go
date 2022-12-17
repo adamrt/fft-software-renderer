@@ -39,9 +39,6 @@ func NewEngine(window *Window, renderer *Renderer) *Engine {
 	return &Engine{window: window, renderer: renderer}
 }
 
-func (e *Engine) loadObj(file string) {
-	mesh = NewMeshFromObj(file)
-}
 func (e *Engine) setup() {
 	e.isRunning = true
 	previous = sdl.GetTicks()
@@ -158,9 +155,7 @@ func (e *Engine) update() {
 	// rendered first. This is based on the average of a triangles vertices so there
 	// are visual issues. A depth buffer will solve this issue.
 	sort.Slice(trianglesToRender, func(i, j int) bool {
-		// This logic seems reverse but it is not. We want larger average depth
-		// values first.
-		return trianglesToRender[i].avgDepth < trianglesToRender[j].avgDepth
+		return trianglesToRender[i].avgDepth > trianglesToRender[j].avgDepth
 	})
 }
 
@@ -184,6 +179,9 @@ func (e *Engine) render() {
 	// Clear triangles from last frame
 	trianglesToRender = trianglesToRender[:0]
 }
+
+func (e *Engine) loadObj(file string) { mesh = NewMeshFromObj(file) }
+func (e *Engine) setMesh(m Mesh)      { mesh = m }
 
 func (e *Engine) changePerspective() {
 	perspective = !perspective
