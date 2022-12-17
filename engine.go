@@ -24,7 +24,8 @@ var (
 	previous uint32
 	delta    float64
 
-	projMatrix     Matrix
+	projMatrix Matrix
+	camera     = NewCamera(Vec3{-1, 1, -1}, Vec3{0, 0, 0}, Vec3{0, 1, 0})
 
 	light DirectionalLight
 )
@@ -94,13 +95,16 @@ func (e *Engine) update() {
 	// mesh.translation.z = 2.0
 
 	worldMatrix := MatrixWorld(mesh.scale, mesh.rotation, mesh.translation)
+	viewMatrix := LookAt(camera.eye, camera.front, camera.up)
 
 	for _, triangle := range mesh.triangles {
 		var vertices [3]Vec3
 
 		// Transform vertices with World Matrix
 		for i, vertex := range triangle.vertices {
-			vertices[i] = worldMatrix.MulVec3(vertex)
+			vertex = worldMatrix.MulVec3(vertex)
+			vertex = viewMatrix.MulVec3(vertex)
+			vertices[i] = vertex
 		}
 
 		// Calculate light before projection

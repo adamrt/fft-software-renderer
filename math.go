@@ -270,6 +270,18 @@ func MatrixOrtho(left, right, bottom, top, near, far float64) Matrix {
 	return m
 }
 
+func LookAt(eye, target, up Vec3) Matrix {
+	z := target.Sub(eye).Normalize() // Forward
+	x := up.Cross(z).Normalize()     // Right
+	y := z.Cross(x)                  // Up
+	return Matrix{                   // View Matrix
+		{x.x, x.y, x.z, -x.Dot(eye)},
+		{y.x, y.y, y.z, -y.Dot(eye)},
+		{z.x, z.y, z.z, -z.Dot(eye)},
+		{0, 0, 0, 1},
+	}
+}
+
 //
 // Misc utility functions
 //
