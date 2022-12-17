@@ -14,6 +14,8 @@ const (
 
 // Data
 var (
+	leftButtonDown bool = false
+
 	autorotate  = false
 	perspective = false
 
@@ -70,6 +72,14 @@ func (e *Engine) processInput() {
 				autorotate = !autorotate
 			case sdl.K_p:
 				e.changePerspective()
+			}
+		case *sdl.MouseButtonEvent:
+			if t.Button == sdl.BUTTON_LEFT {
+				leftButtonDown = t.Type == sdl.MOUSEBUTTONDOWN
+			}
+		case *sdl.MouseMotionEvent:
+			if leftButtonDown {
+				camera.ProcessMouseMovement(float64(t.XRel), float64(t.YRel), delta)
 			}
 		}
 	}
