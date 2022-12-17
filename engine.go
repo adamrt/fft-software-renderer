@@ -30,16 +30,19 @@ var (
 	camera     = NewCamera(Vec3{-1, 1, -1}, Vec3{0, 0, 0}, Vec3{0, 1, 0})
 
 	light DirectionalLight
+
+	currentMap int
 )
 
 type Engine struct {
-	isRunning bool
 	window    *Window
 	renderer  *Renderer
+	reader    *Reader
+	isRunning bool
 }
 
-func NewEngine(window *Window, renderer *Renderer) *Engine {
-	return &Engine{window: window, renderer: renderer}
+func NewEngine(window *Window, renderer *Renderer, reader *Reader) *Engine {
+	return &Engine{window: window, renderer: renderer, reader: reader}
 }
 
 func (e *Engine) setup() {
@@ -72,6 +75,10 @@ func (e *Engine) processInput() {
 				autorotate = !autorotate
 			case sdl.K_p:
 				e.changePerspective()
+			case sdl.K_j:
+				e.prevMap()
+			case sdl.K_k:
+				e.nextMap()
 			}
 		case *sdl.MouseButtonEvent:
 			if t.Button == sdl.BUTTON_LEFT {
@@ -199,7 +206,23 @@ func (e *Engine) render() {
 }
 
 func (e *Engine) loadObj(file string) { mesh = NewMeshFromObj(file) }
-func (e *Engine) setMesh(m Mesh)      { mesh = m }
+func (e *Engine) setMap(n int) {
+	currentMap = n
+	mesh = e.reader.ReadMesh(n)
+	e.setup()
+}
+
+func (e *Engine) prevMap() {
+	if currentMap > 1 {
+		e.setMap(currentMap - 1)
+	}
+}
+
+func (e *Engine) nextMap() {
+	if currentMap < 125 {
+		e.setMap(currentMap + 1)
+	}
+}
 
 func (e *Engine) changePerspective() {
 	perspective = !perspective

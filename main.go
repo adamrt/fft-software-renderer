@@ -10,11 +10,10 @@ func main() {
 	window := NewWindow(windowWidth, windowHeight)
 	defer window.Close()
 	renderer := NewRenderer(window)
-	engine := NewEngine(window, renderer)
-
 	reader := NewReader("/home/adam/tmp/fft.iso")
-	mesh := reader.ReadMesh(12)
-	engine.setMesh(mesh)
+
+	engine := NewEngine(window, renderer, reader)
+	engine.setMap(49)
 
 	engine.setup()
 	for engine.isRunning {

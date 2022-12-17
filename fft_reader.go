@@ -376,7 +376,7 @@ func (r Reader) ReadMesh(mapNum int) Mesh {
 		}
 	}
 
-	mesh.scale = Vec3{x: 3, y: 3, z: 3}
+	mesh.scale = Vec3{x: 5, y: 5, z: 5}
 	if len(textures) > 0 {
 		mesh.texture = textures[0]
 	}
