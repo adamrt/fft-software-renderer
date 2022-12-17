@@ -108,12 +108,15 @@ func (e *Engine) update() {
 		ab, ac := b.Sub(a), c.Sub(a)
 		normal := ab.Cross(ac).Normalize()
 		lightIntensity := -normal.Dot(light.direction)
+
 		triangle.color = triangle.color.Mul(lightIntensity)
+		triangle.avgDepth = (a.z + b.z + c.z) / 3.0
 
 		for i, vertex := range vertices {
 			// Projection
 			vertex := projMatrix.MulVec4(vertex.Vec4())
 
+			// Perspective divide is using perspective projection.
 			if perspective && vertex.w != 0 {
 				vertex.x /= vertex.w
 				vertex.y /= vertex.w
@@ -132,20 +135,15 @@ func (e *Engine) update() {
 			vertex.x += float64(e.window.width / 2)
 			vertex.y += float64(e.window.height / 2)
 
-			vertices[i] = vertex
+			vertices[i] = vertex.Vec3()
 		}
 
 		if shouldCull(vertices) {
 			continue
 		}
 
-		triangle.avgDepth = (a.z + b.z + c.z) / 3.0
-
 		for i, vertex := range vertices {
-			triangle.points[i] = Vec2{
-				x: vertex.x,
-				y: vertex.y,
-			}
+			triangle.points[i] = Vec2{vertex.x, vertex.y}
 		}
 
 		trianglesToRender = append(trianglesToRender, triangle)
