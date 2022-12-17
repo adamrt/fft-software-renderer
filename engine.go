@@ -166,8 +166,15 @@ func (e *Engine) render() {
 	for _, t := range trianglesToRender {
 		// Draw triangles
 		a, b, c := t.points[0], t.points[1], t.points[2]
-		e.renderer.DrawFilledTriangle(int(a.x), int(a.y), int(b.x), int(b.y), int(c.x), int(c.y), t.color)
-		// e.renderer.DrawTriangle(int(a.x), int(a.y), int(b.x), int(b.y), int(c.x), int(c.y), Black)
+		at, bt, ct := t.texcoords[0], t.texcoords[1], t.texcoords[2]
+		// e.renderer.DrawFilledTriangle(int(a.x), int(a.y), int(b.x), int(b.y), int(c.x), int(c.y), t.color)
+
+		e.renderer.DrawTexturedTriangle(
+			int(a.x), int(a.y), at.U, at.V,
+			int(b.x), int(b.y), bt.U, bt.V,
+			int(c.x), int(c.y), ct.U, ct.V,
+			mesh.texture, t.palette)
+		// e.renderer.DrawTriangle(int(a.X), int(a.Y), int(b.X), int(b.Y), int(c.X), int(c.Y), White)
 
 		// Draw vertices
 		// e.renderer.DrawRect(int(a.x)-2, int(a.y)-2, 4, 4, Red)
