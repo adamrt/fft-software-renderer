@@ -62,9 +62,7 @@ func newWindow(width, height int, fullscreen bool) *Window {
 		panic(err)
 	}
 
-	// Our Color struct is in RGBA8888 format but the SDL fgTexture is set to ABGR8888.
-	// SDL reads the strict in big Indian and we are currently on little endian.
-	fgTexture, err := renderer.CreateTexture(sdl.PIXELFORMAT_ABGR8888, sdl.TEXTUREACCESS_STREAMING, int32(width), int32(height))
+	fgTexture, err := renderer.CreateTexture(uint32(sdl.PIXELFORMAT_RGBA32), sdl.TEXTUREACCESS_STREAMING, int32(width), int32(height))
 	if err != nil {
 		panic(err)
 	}
@@ -74,7 +72,7 @@ func newWindow(width, height int, fullscreen bool) *Window {
 	fgTexture.SetBlendMode(sdl.BLENDMODE_BLEND)
 
 	// Background Texture. Static and pre-drawn.
-	bgTexture, err := renderer.CreateTexture(sdl.PIXELFORMAT_ABGR8888, sdl.TEXTUREACCESS_STATIC, int32(width), int32(height))
+	bgTexture, err := renderer.CreateTexture(uint32(sdl.PIXELFORMAT_RGBA32), sdl.TEXTUREACCESS_STATIC, int32(width), int32(height))
 	if err != nil {
 		panic(err)
 	}
