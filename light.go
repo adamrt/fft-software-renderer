@@ -9,3 +9,7 @@ type DirectionalLight struct {
 func NewDirectionLight(direction Vec3) DirectionalLight {
 	return DirectionalLight{Direction: direction}
 }
+
+type AmbientLight struct {
+	Color Color
+}

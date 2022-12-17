@@ -44,3 +44,9 @@ func randColor() Color {
 		A: 255,
 	}
 }
+
+// Gradient background color for FFT Map
+type Background struct {
+	Top    Color
+	Bottom Color
+}
