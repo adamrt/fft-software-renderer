@@ -24,6 +24,10 @@ type Mesh struct {
 	scale       Vec3
 	rotation    Vec3
 	translation Vec3
+
+	ambientLight      AmbientLight
+	directionalLights []DirectionalLight
+	background        Background
 }
 
 func NewMesh() Mesh {

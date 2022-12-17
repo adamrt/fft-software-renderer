@@ -71,7 +71,6 @@ func (e *Engine) processInput() {
 			case sdl.K_p:
 				e.changePerspective()
 			}
-			}
 		}
 	}
 }
