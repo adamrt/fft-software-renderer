@@ -2,16 +2,19 @@ package main
 
 import "math"
 
-func abs(i int) int {
-	return int(math.Abs(float64(i)))
-}
-
 //
 // Vec2
 //
 
 type Vec2 struct {
 	x, y float64
+}
+
+func (v Vec2) Sub(u Vec2) Vec2 {
+	return Vec2{
+		x: v.x - u.x,
+		y: v.y - u.y,
+	}
 }
 
 //
@@ -37,6 +40,7 @@ func (v Vec3) Sub(u Vec3) Vec3 {
 		z: v.z - u.z,
 	}
 }
+
 func (v Vec3) Mul(f float64) Vec3 {
 	return Vec3{
 		x: v.x * f,
@@ -264,4 +268,20 @@ func MatrixOrtho(left, right, bottom, top, near, far float64) Matrix {
 	m[3][1] = -(top + bottom) / tmb
 	m[3][2] = -(far + near) / fmn
 	return m
+}
+
+//
+// Misc utility functions
+//
+
+func abs(i int) int {
+	return int(math.Abs(float64(i)))
+}
+
+func clamp(v, min, max float64) float64 {
+	return math.Min(math.Max(v, min), max)
+}
+
+func normalize(v, min, max float64) float64 {
+	return (v - min) / (max - min)
 }
