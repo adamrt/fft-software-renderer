@@ -1,7 +1,6 @@
 package main
 
 import (
-	"math"
 	"math/rand"
 )
 
@@ -27,7 +26,7 @@ type Color struct {
 }
 
 func (orig Color) Mul(factor float64) Color {
-	factor = math.Max(0, math.Min(factor, 1.0))
+	factor = clamp(factor, 0.0, 1.0)
 	return Color{
 		R: uint8(float64(orig.R) * factor),
 		G: uint8(float64(orig.G) * factor),
@@ -49,4 +48,14 @@ func randColor() Color {
 type Background struct {
 	Top    Color
 	Bottom Color
+}
+
+// These are vertical gradients so we don't care about x.  The colors need to be
+// float64s before subtraction so there isn't uint8 overflow.
+func (bg Background) At(y int, height int) Color {
+	d := float64(y) / float64(height)
+	r := float64(bg.Bottom.R) + d*(float64(bg.Top.R)-float64(bg.Bottom.R))
+	g := float64(bg.Bottom.G) + d*(float64(bg.Top.G)-float64(bg.Bottom.G))
+	b := float64(bg.Bottom.B) + d*(float64(bg.Top.B)-float64(bg.Bottom.B))
+	return Color{uint8(r), uint8(g), uint8(b), 255}
 }

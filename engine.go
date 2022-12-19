@@ -178,6 +178,7 @@ func (e *Engine) updateModel(model *Model) {
 }
 
 func (e *Engine) render() {
+	e.renderer.DrawBackground(model.mesh.background)
 	// Draw
 	for _, t := range model.trianglesToRender {
 		// Draw triangles

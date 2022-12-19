@@ -20,6 +20,15 @@ func (r *Renderer) DrawRect(x, y, w, h int, color Color) {
 	}
 }
 
+func (r *Renderer) DrawBackground(bg Background) {
+	for y := 0; y < r.window.height; y++ {
+		color := bg.At(y, r.window.height)
+		for x := 0; x < r.window.width; x++ {
+			r.window.SetPixel(x, y, color)
+		}
+	}
+}
+
 // DrawLine draws a solid line using the DDA algorithm.
 func (r *Renderer) DrawLine(x0, y0, x1, y1 int, color Color) {
 	deltaX := x1 - x0
