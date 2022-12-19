@@ -21,8 +21,7 @@ func (c *Camera) ProcessMouseMovement(xrel, yrel, delta float64) {
 	maxAzimuthAngle := math.Inf(1)
 
 	// Compute direction vector from target to camera
-	tcam := c.eye
-	tcam = tcam.Sub(c.front)
+	tcam := c.eye.Sub(c.front)
 
 	// Calculate angles based on current camera position plus deltas
 	radius := tcam.Length()
@@ -38,6 +37,9 @@ func (c *Camera) ProcessMouseMovement(xrel, yrel, delta float64) {
 	tcam.x = radius * math.Sin(phi) * math.Sin(theta)
 	tcam.y = radius * math.Cos(phi)
 	tcam.z = radius * math.Sin(phi) * math.Cos(theta)
+
+	// Don't allow camera to go below bottom of map
+	tcam.y = math.Max(tcam.y, 0.0)
 
 	// Update camera position and orientation
 	c.eye = c.front.Add(tcam)

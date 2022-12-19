@@ -56,7 +56,7 @@ func (m *Mesh) centerCoordinates() {
 	matrix := MatrixTranslation(vec3)
 	for i := 0; i < len(m.triangles); i++ {
 		for j := 0; j < 3; j++ {
-			transformed := matrix.MulVec4(m.triangles[i].vertices[j].Vec4()).Vec3()
+			transformed := matrix.MulVec3(m.triangles[i].vertices[j])
 			m.triangles[i].vertices[j] = transformed
 		}
 	}

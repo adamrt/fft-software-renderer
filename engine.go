@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	FPS        = 30
+	FPS        = 60
 	MSPerFrame = (1000 / FPS)
 )
 
@@ -101,14 +101,8 @@ func (e *Engine) update() {
 	previous = sdl.GetTicks()
 
 	if autorotate {
-		// Mesh transformation setup
-		// mesh.rotation.x += 0.005
-		mesh.rotation.y += 0.01
-		// mesh.rotation.z += 0.005
+		mesh.rotation.y += 0.5 * delta
 	}
-
-	// Temporary until we have a camera/view matrix
-	// mesh.translation.z = 2.0
 
 	worldMatrix := MatrixWorld(mesh.scale, mesh.rotation, mesh.translation)
 	viewMatrix := LookAt(camera.eye, camera.front, camera.up)
