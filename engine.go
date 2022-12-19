@@ -15,24 +15,22 @@ const (
 // Data
 var (
 	leftButtonDown bool = false
+	currentMap     int
 
 	autorotate    = false
 	perspective   = false
 	showTexture   = true
 	showWireframe = false
 
-	model = Model{}
-
 	// Timing
 	previous uint32
 	delta    float64
 
+	model      = Model{}
 	projMatrix Matrix
 	camera     = NewCamera(Vec3{-1, 1, -1}, Vec3{0, 0, 0}, Vec3{0, 1, 0})
 
 	light DirectionalLight
-
-	currentMap int
 )
 
 type Engine struct {
@@ -109,15 +107,19 @@ func (e *Engine) update() {
 		model.mesh.rotation.y += 0.5 * delta
 	}
 
-	worldMatrix := MatrixWorld(model.mesh.scale, model.mesh.rotation, model.mesh.translation)
 	viewMatrix := LookAt(camera.eye, camera.front, camera.up)
+	e.updateModel(&model, viewMatrix)
+}
+
+func (e *Engine) updateModel(model *Model, viewMatrix Matrix) {
+	model.UpdateWorldMatrix()
 
 	for _, triangle := range model.mesh.triangles {
 		var vertices [3]Vec3
 
 		// Transform vertices with World Matrix
 		for i, vertex := range triangle.vertices {
-			vertex = worldMatrix.MulVec3(vertex)
+			vertex = model.WorldMatrix().MulVec3(vertex)
 			vertex = viewMatrix.MulVec3(vertex)
 			vertices[i] = vertex
 		}
