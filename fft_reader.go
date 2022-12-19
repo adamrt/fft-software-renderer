@@ -103,7 +103,7 @@ func (r Reader) readTriangle() Triangle {
 	a := r.readVertex()
 	b := r.readVertex()
 	c := r.readVertex()
-	return Triangle{vertices: [3]Vec3{a, b, c}, color: Red}
+	return Triangle{vertices: [3]Vec3{a, b, c}, color: White}
 }
 
 func (r Reader) readQuad() []Triangle {

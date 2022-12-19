@@ -16,11 +16,12 @@ const (
 var (
 	leftButtonDown bool = false
 
-	autorotate  = false
-	perspective = false
+	autorotate    = false
+	perspective   = false
+	showTexture   = true
+	showWireframe = false
 
-	trianglesToRender = []Triangle{}
-	mesh              = Mesh{}
+	model = Model{}
 
 	// Timing
 	previous uint32
@@ -75,6 +76,10 @@ func (e *Engine) processInput() {
 				autorotate = !autorotate
 			case sdl.K_p:
 				e.changePerspective()
+			case sdl.K_t:
+				showTexture = !showTexture
+			case sdl.K_w:
+				showWireframe = !showWireframe
 			case sdl.K_j:
 				e.prevMap()
 			case sdl.K_k:
@@ -101,13 +106,13 @@ func (e *Engine) update() {
 	previous = sdl.GetTicks()
 
 	if autorotate {
-		mesh.rotation.y += 0.5 * delta
+		model.mesh.rotation.y += 0.5 * delta
 	}
 
-	worldMatrix := MatrixWorld(mesh.scale, mesh.rotation, mesh.translation)
+	worldMatrix := MatrixWorld(model.mesh.scale, model.mesh.rotation, model.mesh.translation)
 	viewMatrix := LookAt(camera.eye, camera.front, camera.up)
 
-	for _, triangle := range mesh.triangles {
+	for _, triangle := range model.mesh.triangles {
 		var vertices [3]Vec3
 
 		// Transform vertices with World Matrix
@@ -160,49 +165,50 @@ func (e *Engine) update() {
 			triangle.points[i] = Vec2{vertex.x, vertex.y}
 		}
 
-		trianglesToRender = append(trianglesToRender, triangle)
+		model.trianglesToRender = append(model.trianglesToRender, triangle)
 	}
 
 	// Painters algorithm. Sort the projected triangles so the ones further away are
 	// rendered first. This is based on the average of a triangles vertices so there
 	// are visual issues. A depth buffer will solve this issue.
-	sort.Slice(trianglesToRender, func(i, j int) bool {
-		return trianglesToRender[i].avgDepth > trianglesToRender[j].avgDepth
+	sort.Slice(model.trianglesToRender, func(i, j int) bool {
+		return model.trianglesToRender[i].avgDepth > model.trianglesToRender[j].avgDepth
 	})
 }
 
 func (e *Engine) render() {
 	// Draw
-	for _, t := range trianglesToRender {
+	for _, t := range model.trianglesToRender {
 		// Draw triangles
 		a, b, c := t.points[0], t.points[1], t.points[2]
-		at, bt, ct := t.texcoords[0], t.texcoords[1], t.texcoords[2]
-		// e.renderer.DrawFilledTriangle(int(a.x), int(a.y), int(b.x), int(b.y), int(c.x), int(c.y), t.color)
 
-		e.renderer.DrawTexturedTriangle(
-			int(a.x), int(a.y), at.U, at.V,
-			int(b.x), int(b.y), bt.U, bt.V,
-			int(c.x), int(c.y), ct.U, ct.V,
-			mesh.texture, t.palette)
-		// e.renderer.DrawTriangle(int(a.X), int(a.Y), int(b.X), int(b.Y), int(c.X), int(c.Y), White)
+		if showTexture {
+			at, bt, ct := t.texcoords[0], t.texcoords[1], t.texcoords[2]
+			e.renderer.DrawTexturedTriangle(int(a.x), int(a.y), at.U, at.V, int(b.x), int(b.y), bt.U, bt.V, int(c.x), int(c.y), ct.U, ct.V, model.mesh.texture, t.palette)
+		} else {
+			e.renderer.DrawFilledTriangle(int(a.x), int(a.y), int(b.x), int(b.y), int(c.x), int(c.y), t.color)
+		}
 
-		// Draw vertices
-		// e.renderer.DrawRect(int(a.x)-2, int(a.y)-2, 4, 4, Red)
-		// e.renderer.DrawRect(int(b.x)-2, int(b.y)-2, 4, 4, Red)
-		// e.renderer.DrawRect(int(c.x)-2, int(c.y)-2, 4, 4, Red)
+		if showWireframe {
+			e.renderer.DrawTriangle(int(a.x), int(a.y), int(b.x), int(b.y), int(c.x), int(c.y), Magenta)
+		}
 	}
 
 	// Present
 	e.window.Present()
 
 	// Clear triangles from last frame
-	trianglesToRender = trianglesToRender[:0]
+	model.trianglesToRender = model.trianglesToRender[:0]
 }
 
-func (e *Engine) loadObj(file string) { mesh = NewMeshFromObj(file) }
+func (e *Engine) renderModel(model *Model, viewMatrix Matrix) {
+
+}
+
+func (e *Engine) loadObj(file string) { model.mesh = NewMeshFromObj(file) }
 func (e *Engine) setMap(n int) {
 	currentMap = n
-	mesh = e.reader.ReadMesh(n)
+	model.mesh = e.reader.ReadMesh(n)
 	e.setup()
 }
 
@@ -221,9 +227,9 @@ func (e *Engine) nextMap() {
 func (e *Engine) changePerspective() {
 	perspective = !perspective
 	if perspective {
-		mesh.scale = Vec3{1, 1, 1}
+		model.mesh.scale = Vec3{2, 2, 2}
 	} else {
-		mesh.scale = Vec3{3, 3, 3}
+		model.mesh.scale = Vec3{5, 5, 5}
 	}
 	e.setup()
 
