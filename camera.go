@@ -1,15 +1,91 @@
 package main
 
-import "math"
+import (
+	"math"
+)
+
+const (
+	MinZoom = 2.0
+	MaxZoom = 0.5
+)
+
+type Projection int
+
+const (
+	Orthographic Projection = iota
+	Perspective
+)
 
 type Camera struct {
 	eye   Vec3
 	front Vec3
 	up    Vec3
+
+	projection Projection
+	projMatrix Matrix
+	viewMatrix Matrix
+
+	width  int
+	height int
+	zoom   float64
 }
 
-func NewCamera(eye, front, up Vec3) *Camera {
-	return &Camera{eye, front, up}
+func NewCamera(eye, front, up Vec3, width, height int) *Camera {
+	c := Camera{
+		eye:        eye,
+		front:      front,
+		up:         up,
+		width:      width,
+		height:     height,
+		projection: Orthographic,
+		zoom:       1.0,
+	}
+	c.updateProjMatrix()
+	c.updateViewMatrix()
+	return &c
+}
+
+func (c *Camera) aspectRatio() float64     { return float64(c.height) / float64(c.width) }
+func (c *Camera) ViewMatrix() Matrix       { return c.viewMatrix }
+func (c *Camera) ProjectionMatrix() Matrix { return c.projMatrix }
+
+func (c *Camera) updateViewMatrix() {
+	c.viewMatrix = LookAt(c.eye, c.front, c.up)
+}
+
+func (c *Camera) AdjustZoom(f float64) {
+	f *= 0.1
+	c.zoom -= f
+
+	if c.zoom < MaxZoom {
+		c.zoom = MaxZoom
+	}
+	if c.zoom > MinZoom {
+		c.zoom = MinZoom
+	}
+
+	c.updateProjMatrix()
+}
+
+func (c *Camera) ChangeProjection() {
+	if c.projection == Orthographic {
+		c.projection = Perspective
+	} else {
+		c.projection = Orthographic
+	}
+	c.updateProjMatrix()
+}
+
+func (c *Camera) updateProjMatrix() {
+	if c.projection == Orthographic {
+		v := 1.0 * c.zoom
+		c.projMatrix = MatrixOrtho(-v, v, -v, v, 1, 100)
+	} else {
+		// (180/3 = 60 degrees). Value is in radians.
+		fov := (math.Pi / 3.0) * c.zoom
+		aspect := c.aspectRatio()
+		c.projMatrix = MatrixPerspective(fov, aspect, 1.0, 100.0)
+	}
 }
 
 func (c *Camera) ProcessMouseMovement(xrel, yrel, delta float64) {
@@ -43,4 +119,6 @@ func (c *Camera) ProcessMouseMovement(xrel, yrel, delta float64) {
 
 	// Update camera position and orientation
 	c.eye = c.front.Add(tcam)
+
+	c.updateViewMatrix()
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"math"
 	"sort"
 
 	"github.com/veandco/go-sdl2/sdl"
@@ -18,7 +17,6 @@ var (
 	currentMap     int
 
 	autorotate    = false
-	perspective   = false
 	showTexture   = true
 	showWireframe = false
 
@@ -28,7 +26,6 @@ var (
 
 	model      = Model{}
 	projMatrix Matrix
-	camera     = NewCamera(Vec3{-1, 1, -1}, Vec3{0, 0, 0}, Vec3{0, 1, 0})
 
 	light DirectionalLight
 )
@@ -37,23 +34,22 @@ type Engine struct {
 	window    *Window
 	renderer  *Renderer
 	reader    *Reader
+	camera    *Camera
 	isRunning bool
 }
 
 func NewEngine(window *Window, renderer *Renderer, reader *Reader) *Engine {
-	return &Engine{window: window, renderer: renderer, reader: reader}
+	return &Engine{
+		window:   window,
+		renderer: renderer,
+		reader:   reader,
+		camera:   NewCamera(Vec3{1, 1, -1}, Vec3{0, 0, 0}, Vec3{0, 1, 0}, window.width, window.height),
+	}
 }
 
 func (e *Engine) setup() {
 	e.isRunning = true
 	previous = sdl.GetTicks()
-
-	aspect := float64(e.window.height) / float64(e.window.width)
-	fov := math.Pi / 3.0 // (180/3 = 60 degrees). Value is in radians.
-	projMatrix = MatrixOrtho(-3, 3, -3, 3, 1, 100)
-	if perspective {
-		projMatrix = MatrixPerspective(fov, aspect, 1.0, 100.0)
-	}
 
 	light = NewDirectionLight(Vec3{0, 0, 1})
 }
@@ -73,7 +69,7 @@ func (e *Engine) processInput() {
 			case sdl.K_SPACE:
 				autorotate = !autorotate
 			case sdl.K_p:
-				e.changePerspective()
+				e.camera.ChangeProjection()
 			case sdl.K_t:
 				showTexture = !showTexture
 			case sdl.K_w:
@@ -89,8 +85,10 @@ func (e *Engine) processInput() {
 			}
 		case *sdl.MouseMotionEvent:
 			if leftButtonDown {
-				camera.ProcessMouseMovement(float64(t.XRel), float64(t.YRel), delta)
+				e.camera.ProcessMouseMovement(float64(t.XRel), float64(t.YRel), delta)
 			}
+		case *sdl.MouseWheelEvent:
+			e.camera.AdjustZoom(float64(t.PreciseY))
 		}
 	}
 }
@@ -107,11 +105,10 @@ func (e *Engine) update() {
 		model.mesh.rotation.y += 0.5 * delta
 	}
 
-	viewMatrix := LookAt(camera.eye, camera.front, camera.up)
-	e.updateModel(&model, viewMatrix)
+	e.updateModel(&model)
 }
 
-func (e *Engine) updateModel(model *Model, viewMatrix Matrix) {
+func (e *Engine) updateModel(model *Model) {
 	model.UpdateWorldMatrix()
 
 	for _, triangle := range model.mesh.triangles {
@@ -120,7 +117,7 @@ func (e *Engine) updateModel(model *Model, viewMatrix Matrix) {
 		// Transform vertices with World Matrix
 		for i, vertex := range triangle.vertices {
 			vertex = model.WorldMatrix().MulVec3(vertex)
-			vertex = viewMatrix.MulVec3(vertex)
+			vertex = e.camera.ViewMatrix().MulVec3(vertex)
 			vertices[i] = vertex
 		}
 
@@ -135,13 +132,15 @@ func (e *Engine) updateModel(model *Model, viewMatrix Matrix) {
 
 		for i, vertex := range vertices {
 			// Projection
-			vertex := projMatrix.MulVec4(vertex.Vec4())
+			vertex := e.camera.ProjectionMatrix().MulVec4(vertex.Vec4())
 
 			// Perspective divide is using perspective projection.
-			if perspective && vertex.w != 0 {
-				vertex.x /= vertex.w
-				vertex.y /= vertex.w
-				vertex.z /= vertex.w
+			if e.camera.projection == Perspective {
+				if vertex.w != 0 {
+					vertex.x /= vertex.w
+					vertex.y /= vertex.w
+					vertex.z /= vertex.w
+				}
 			}
 
 			// Invert the Y asis to compensate for the Y axis of the model and
@@ -224,17 +223,6 @@ func (e *Engine) nextMap() {
 	if currentMap < 125 {
 		e.setMap(currentMap + 1)
 	}
-}
-
-func (e *Engine) changePerspective() {
-	perspective = !perspective
-	if perspective {
-		model.mesh.scale = Vec3{2, 2, 2}
-	} else {
-		model.mesh.scale = Vec3{5, 5, 5}
-	}
-	e.setup()
-
 }
 
 // Backface culling
