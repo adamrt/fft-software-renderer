@@ -25,6 +25,10 @@ type Color struct {
 	R, G, B, A uint8
 }
 
+func (c Color) isTrans() bool {
+	return c.A == 0 && c.R == 0 && c.G == 0 && c.B == 0
+}
+
 func (orig Color) Mul(factor float64) Color {
 	factor = clamp(factor, 0.0, 1.0)
 	return Color{

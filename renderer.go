@@ -240,22 +240,26 @@ func (r *Renderer) drawTexel(
 	texX := abs(int(interpolatedU * float64(texture.width)))
 	texY := abs(int(interpolatedV * float64(texture.height)))
 
-	idx := (texture.width * texY) + texX
-	if idx >= 0 && idx < textureLen {
-		textureColor := texture.data[(texY*texture.width)+texX]
-		// If there is a palette, the current color components will
-		// represent the index into the palette.
-		if palette != nil {
-			textureColor = palette[textureColor.R]
-		}
-
-		// Transparent texture
-		if textureColor.A == 0 && textureColor.R == 0 && textureColor.G == 0 && textureColor.B == 0 {
-			return
-		}
-
-		r.window.SetPixel(x, y, textureColor)
+	// Validate the index is inside the texture.
+	index := (texY * texture.width) + texX
+	if index < 0 || index > texture.width*texture.height {
+		return
 	}
+
+	textureColor := texture.data[index]
+	// If there is a palette, the current color components will
+	// represent the index into the palette.
+	if palette != nil {
+		textureColor = palette[textureColor.R]
+	}
+
+	// Transparent texture
+	if textureColor.isTrans() {
+		return
+	}
+
+	r.window.SetPixel(x, y, textureColor)
+
 }
 
 func barycentricWeights(a, b, c, p Vec2) Vec3 {
