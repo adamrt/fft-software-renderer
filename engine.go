@@ -25,8 +25,6 @@ var (
 	delta    float64
 
 	model Model
-
-	light DirectionalLight
 )
 
 type Engine struct {
@@ -49,8 +47,6 @@ func NewEngine(window *Window, renderer *Renderer, reader *Reader) *Engine {
 func (e *Engine) setup() {
 	e.isRunning = true
 	previous = sdl.GetTicks()
-
-	light = NewDirectionLight(Vec3{0, 0, 1})
 }
 
 func (e *Engine) processInput() {
@@ -67,12 +63,12 @@ func (e *Engine) processInput() {
 				e.isRunning = false
 			case sdl.K_SPACE:
 				autorotate = !autorotate
-			case sdl.K_p:
-				e.camera.ChangeProjection()
 			case sdl.K_t:
 				showTexture = !showTexture
 			case sdl.K_w:
 				showWireframe = !showWireframe
+			case sdl.K_p:
+				e.camera.changeProjection()
 			case sdl.K_j:
 				e.prevMap()
 			case sdl.K_k:
