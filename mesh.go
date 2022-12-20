@@ -7,15 +7,17 @@ type Tex struct {
 }
 
 type Triangle struct {
-	vertices [3]Vec3
-	points   [3]Vec2
-
+	vertices  [3]Vec3
+	normals   [3]Vec3
 	texcoords [3]Tex
 	palette   Palette
 
-	// color of untextured triangle
-	color    Color
+	// Computed during render
+	points   [3]Vec2
 	avgDepth float64
+
+	// Color of untextured triangle
+	color Color
 }
 
 type Mesh struct {

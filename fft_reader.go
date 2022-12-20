@@ -93,9 +93,11 @@ func (r Reader) readInt16() int16 { return int16(r.readUint16()) }
 func (r Reader) readInt32() int32 { return int32(r.readUint32()) }
 
 func (r Reader) readVertex() Vec3 {
-	x := float64(r.readInt16())
-	y := float64(r.readInt16())
-	z := float64(r.readInt16())
+
+	// Normals and light direction need to be normalized after this.
+	x := float64(r.readInt16()) / 4096.0
+	y := float64(r.readInt16()) / 4096.0
+	z := float64(r.readInt16()) / 4096.0
 	return Vec3{x: x, y: -y, z: z}
 }
 
@@ -124,19 +126,19 @@ func (r Reader) readNormal() Vec3 {
 	return Vec3{x: x, y: -y, z: z}
 }
 
-func (r Reader) readTriNormal() []Vec3 {
+func (r Reader) readTriNormal() [3]Vec3 {
 	a := r.readNormal()
 	b := r.readNormal()
 	c := r.readNormal()
-	return []Vec3{a, b, c}
+	return [3]Vec3{a, b, c}
 }
 
-func (r Reader) readQuadNormal() [][]Vec3 {
+func (r Reader) readQuadNormal() [][3]Vec3 {
 	a := r.readNormal()
 	b := r.readNormal()
 	c := r.readNormal()
 	d := r.readNormal()
-	return [][]Vec3{
+	return [][3]Vec3{
 		{a, b, c},
 		{b, d, c},
 	}
@@ -380,9 +382,9 @@ func (r Reader) ReadMesh(mapNum int) Mesh {
 		mesh.texture = textures[0]
 	}
 
-	s := 1.8
+	s := 20.0
 	mesh.scale = Vec3{s, s, s}
-	mesh.normalizeCoordinates()
+	// mesh.normalizeCoordinates()
 	mesh.centerCoordinates()
 	return mesh
 }
@@ -468,10 +470,12 @@ func (r Reader) parseMesh(record GNSRecord) Mesh {
 	// next.  This could be cleaned up as a seek, but we may eventually use
 	// the normal data here.
 	for i := 0; i < header.N(); i++ {
-		r.readTriNormal()
+		triangles[i].normals = r.readTriNormal()
 	}
-	for i := 0; i < header.P(); i++ {
-		r.readQuadNormal()
+	for i := header.N(); i < header.TT(); i = i + 2 {
+		qns := r.readQuadNormal()
+		triangles[i].normals = qns[0]
+		triangles[i+1].normals = qns[1]
 	}
 
 	// Polygon texture data
