@@ -244,10 +244,8 @@ func MatrixRotationZ(angle float64) Matrix {
 	}
 }
 
-// Return a Perspective Projection Matrix
-//
-// The 3/2==1 stores the original z value for use in MulProjection so we can do
-// perspective divide in MulVec4Proj().
+// Return a Perspective Projection Matrix.
+// The 3/2==1 stores the original z value in w for perspective divide.
 func MatrixPerspective(fov, aspect, znear, zfar float64) Matrix {
 	m := Matrix{}
 	m[0][0] = aspect * (1 / math.Tan(fov/2))

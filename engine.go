@@ -100,35 +100,31 @@ func (e *Engine) update() {
 	delta = float64(sdl.GetTicks()-previous) / 1000.0
 	previous = sdl.GetTicks()
 
-	if autorotate {
-		model.mesh.rotation.y += 0.5 * delta
-	}
-
 	e.updateModel(&model)
 }
 
 func (e *Engine) updateModel(model *Model) {
-	model.UpdateWorldMatrix()
+	if autorotate {
+		model.mesh.rotation.y += 0.5 * delta
+	}
+
+	model.UpdateMatrix()
 
 	for _, triangle := range model.mesh.triangles {
 		var vertices [3]Vec3
 
 		// Transform vertices with World Matrix
 		for i, vertex := range triangle.vertices {
-			vertex = model.WorldMatrix().MulVec3(vertex)
+			vertex = model.Matrix().MulVec3(vertex)
 			vertex = e.camera.ViewMatrix().MulVec3(vertex)
 			vertices[i] = vertex
 		}
 
-		// Calculate light before projection
+		// Calculate average depth after vertex is in view space.
 		a, b, c := vertices[0], vertices[1], vertices[2]
-		ab, ac := b.Sub(a), c.Sub(a)
-		normal := ab.Cross(ac).Normalize()
-		lightIntensity := -normal.Dot(light.direction)
-
-		triangle.color = triangle.color.Mul(lightIntensity)
 		triangle.avgDepth = (a.z + b.z + c.z) / 3.0
 
+		// Project vertices with Projection Matrix.
 		for i, vertex := range vertices {
 			// Projection
 			vertex := e.camera.ProjectionMatrix().MulVec4(vertex.Vec4())
@@ -207,6 +203,7 @@ func (e *Engine) renderModel(model *Model, viewMatrix Matrix) {
 }
 
 func (e *Engine) loadObj(file string) { model.mesh = NewMeshFromObj(file) }
+
 func (e *Engine) setMap(n int) {
 	currentMap = n
 	model.mesh = e.reader.ReadMesh(n)

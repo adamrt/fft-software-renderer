@@ -8,14 +8,14 @@ type Model struct {
 
 func NewModel(mesh Mesh) Model {
 	m := Model{mesh: mesh}
-	m.UpdateWorldMatrix()
+	m.UpdateMatrix()
 	return m
 }
 
-func (m *Model) UpdateWorldMatrix() {
+func (m *Model) UpdateMatrix() {
 	m.worldMatrix = MatrixWorld(m.mesh.scale, m.mesh.rotation, m.mesh.translation)
 }
 
-func (m *Model) WorldMatrix() Matrix {
+func (m *Model) Matrix() Matrix {
 	return m.worldMatrix
 }

@@ -21,9 +21,9 @@ type Camera struct {
 	front Vec3
 	up    Vec3
 
-	projection Projection
-	projMatrix Matrix
-	viewMatrix Matrix
+	projection       Projection
+	projectionMatrix Matrix
+	viewMatrix       Matrix
 
 	width  int
 	height int
@@ -40,14 +40,14 @@ func NewCamera(eye, front, up Vec3, width, height int) *Camera {
 		projection: Orthographic,
 		zoom:       1.0,
 	}
-	c.updateProjMatrix()
+	c.updateProjectionMatrix()
 	c.updateViewMatrix()
 	return &c
 }
 
 func (c *Camera) aspectRatio() float64     { return float64(c.height) / float64(c.width) }
 func (c *Camera) ViewMatrix() Matrix       { return c.viewMatrix }
-func (c *Camera) ProjectionMatrix() Matrix { return c.projMatrix }
+func (c *Camera) ProjectionMatrix() Matrix { return c.projectionMatrix }
 
 func (c *Camera) updateViewMatrix() {
 	c.viewMatrix = LookAt(c.eye, c.front, c.up)
@@ -64,27 +64,27 @@ func (c *Camera) AdjustZoom(f float64) {
 		c.zoom = MinZoom
 	}
 
-	c.updateProjMatrix()
+	c.updateProjectionMatrix()
 }
 
-func (c *Camera) ChangeProjection() {
+func (c *Camera) changeProjection() {
 	if c.projection == Orthographic {
 		c.projection = Perspective
 	} else {
 		c.projection = Orthographic
 	}
-	c.updateProjMatrix()
+	c.updateProjectionMatrix()
 }
 
-func (c *Camera) updateProjMatrix() {
+func (c *Camera) updateProjectionMatrix() {
 	if c.projection == Orthographic {
 		v := 1.0 * c.zoom
-		c.projMatrix = MatrixOrtho(-v, v, -v, v, 1, 100)
+		c.projectionMatrix = MatrixOrtho(-v, v, -v, v, 1, 100)
 	} else {
 		// (180/3 = 60 degrees). Value is in radians.
 		fov := (math.Pi / 3.0) * c.zoom
 		aspect := c.aspectRatio()
-		c.projMatrix = MatrixPerspective(fov, aspect, 1.0, 100.0)
+		c.projectionMatrix = MatrixPerspective(fov, aspect, 1.0, 100.0)
 	}
 }
 
