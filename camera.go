@@ -77,13 +77,15 @@ func (c *Camera) changeProjection() {
 }
 
 func (c *Camera) updateProjectionMatrix() {
+	aspect := c.aspectRatio()
+
 	if c.projection == Orthographic {
-		v := 1.0 * c.zoom
-		c.projectionMatrix = MatrixOrtho(-v, v, -v, v, 1, 100)
+		w := 1.0 * c.zoom
+		h := 1.0 * aspect * c.zoom
+		c.projectionMatrix = MatrixOrtho(-w, w, -h, h, 1.0, 100.0)
 	} else {
 		// (180/3 = 60 degrees). Value is in radians.
 		fov := (math.Pi / 3.0) * c.zoom
-		aspect := c.aspectRatio()
 		c.projectionMatrix = MatrixPerspective(fov, aspect, 1.0, 100.0)
 	}
 }

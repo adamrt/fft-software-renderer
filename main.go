@@ -2,7 +2,7 @@ package main
 
 const (
 	windowWidth  = 1024
-	windowHeight = 1024
+	windowHeight = 768
 )
 
 func main() {
@@ -13,7 +13,7 @@ func main() {
 	reader := NewReader("/home/adam/tmp/fft.iso")
 
 	engine := NewEngine(window, renderer, reader)
-	engine.setMap(54)
+	engine.setMap(49)
 
 	engine.setup()
 	for engine.isRunning {
