@@ -2,6 +2,7 @@ package main
 
 import (
 	"sort"
+	"unsafe"
 
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -28,10 +29,11 @@ var (
 )
 
 type Engine struct {
-	window    *Window
-	renderer  *Renderer
+	window   *Window
+	renderer *Renderer
+	camera   *Camera
+
 	reader    *Reader
-	camera    *Camera
 	isRunning bool
 }
 
@@ -169,7 +171,6 @@ func (e *Engine) updateModel(model *Model) {
 }
 
 func (e *Engine) render() {
-	e.renderer.DrawBackground(model.mesh.background)
 	// Draw
 	for _, t := range model.trianglesToRender {
 		// Draw triangles
@@ -198,12 +199,26 @@ func (e *Engine) renderModel(model *Model, viewMatrix Matrix) {
 
 }
 
-func (e *Engine) loadObj(file string) { model.mesh = NewMeshFromObj(file) }
+func (e *Engine) loadObj(file string) {
+	model.mesh = NewMeshFromObj(file)
+}
 
 func (e *Engine) setMap(n int) {
 	currentMap = n
 	model.mesh = e.reader.ReadMesh(n)
-	e.setup()
+	e.updateBackgroundTexture()
+}
+
+func (e *Engine) updateBackgroundTexture() {
+	bg := model.mesh.background
+	bgBuffer := make([]Color, e.window.width*e.window.height)
+	for y := 0; y < e.window.height; y++ {
+		color := bg.At(y, e.window.height)
+		for x := 0; x < e.window.width; x++ {
+			bgBuffer[(e.window.width*y)+x] = color
+		}
+	}
+	e.window.bgTexture.Update(nil, unsafe.Pointer(&bgBuffer[0]), e.window.width*4)
 }
 
 func (e *Engine) prevMap() {

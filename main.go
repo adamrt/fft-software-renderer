@@ -13,7 +13,7 @@ func main() {
 	reader := NewReader("/home/adam/tmp/fft.iso")
 
 	engine := NewEngine(window, renderer, reader)
-	engine.setMap(49)
+	engine.setMap(54)
 
 	engine.setup()
 	for engine.isRunning {
