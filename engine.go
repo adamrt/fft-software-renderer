@@ -24,8 +24,7 @@ var (
 	previous uint32
 	delta    float64
 
-	model      = Model{}
-	projMatrix Matrix
+	model Model
 
 	light DirectionalLight
 )
