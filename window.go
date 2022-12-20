@@ -76,8 +76,8 @@ func newWindow(width, height int, fullscreen bool) *Window {
 	if err != nil {
 		panic(err)
 	}
-	bgBuffer := genCheckerboard(width, height)
-	// Update the texture now as it wont change.
+	bgBuffer := GenerateCheckerboard(width, height, LightGray, DarkGray)
+	// Update the texture since it possibly wont change unless a diff bg is used.
 	bgTexture.Update(nil, unsafe.Pointer(&bgBuffer[0]), width*4)
 
 	return &Window{
@@ -123,21 +123,4 @@ func (w *Window) Close() {
 	w.renderer.Destroy()
 	w.window.Destroy()
 	sdl.Quit()
-}
-
-// This returns a checkerboard for background use.
-// It will be copied into a sdl.Texture.
-func genCheckerboard(width, height int) []Color {
-	// Draw checkerboard to buffer
-	bgBuffer := make([]Color, width*height)
-	for x := 0; x < width; x++ {
-		for y := 0; y < height; y++ {
-			if (y%(64) < 32) == (x%(64) < 32) {
-				bgBuffer[y*width+x] = LightGray
-			} else {
-				bgBuffer[y*width+x] = DarkGray
-			}
-		}
-	}
-	return bgBuffer
 }

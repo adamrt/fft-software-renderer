@@ -29,13 +29,13 @@ func (c Color) isTrans() bool {
 	return c.A == 0 && c.R == 0 && c.G == 0 && c.B == 0
 }
 
-func (orig Color) Mul(factor float64) Color {
+func (c Color) Mul(factor float64) Color {
 	factor = clamp(factor, 0.0, 1.0)
 	return Color{
-		R: uint8(float64(orig.R) * factor),
-		G: uint8(float64(orig.G) * factor),
-		B: uint8(float64(orig.B) * factor),
-		A: orig.A,
+		R: uint8(float64(c.R) * factor),
+		G: uint8(float64(c.G) * factor),
+		B: uint8(float64(c.B) * factor),
+		A: c.A,
 	}
 }
 
@@ -62,4 +62,20 @@ func (bg Background) At(y int, height int) Color {
 	g := float64(bg.Bottom.G) + d*(float64(bg.Top.G)-float64(bg.Bottom.G))
 	b := float64(bg.Bottom.B) + d*(float64(bg.Top.B)-float64(bg.Bottom.B))
 	return Color{uint8(r), uint8(g), uint8(b), 255}
+}
+
+// This returns a checkerboard for background use. It will be copied into a sdl.Texture.
+func GenerateCheckerboard(width, height int, a, b Color) []Color {
+	// Draw checkerboard to buffer
+	bgBuffer := make([]Color, width*height)
+	for x := 0; x < width; x++ {
+		for y := 0; y < height; y++ {
+			if (y%(64) < 32) == (x%(64) < 32) {
+				bgBuffer[y*width+x] = a
+			} else {
+				bgBuffer[y*width+x] = b
+			}
+		}
+	}
+	return bgBuffer
 }
