@@ -19,6 +19,8 @@ func NewMeshFromObj(objFilename string) Mesh {
 	mesh := NewMesh()
 
 	vertices := []Vec3{}
+	var vts []Tex
+
 	scanner := bufio.NewScanner(objFile)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -30,6 +32,14 @@ func NewMeshFromObj(objFilename string) Mesh {
 				log.Fatalf("vertex: only %d matches on line %q\n", matches, line)
 			}
 			vertices = append(vertices, v)
+		case strings.HasPrefix(line, "vt "):
+			var vt Tex
+			matches, err := fmt.Fscanf(strings.NewReader(line), "vt %f %f", &vt.U, &vt.V)
+			if err != nil || matches != 2 {
+				log.Fatalf("vertex: only %d matches on line %q\n", matches, line)
+			}
+			vt.V = 1 - vt.V
+			vts = append(vts, vt)
 		case strings.HasPrefix(line, "f "):
 			var vertexIndices [3]int
 			var normalIndices [3]int
@@ -56,6 +66,11 @@ func NewMeshFromObj(objFilename string) Mesh {
 
 			triangle := Triangle{
 				color: White,
+				texcoords: [3]Tex{
+					vts[textureIndices[0]-1],
+					vts[textureIndices[1]-1],
+					vts[textureIndices[2]-1],
+				},
 				vertices: [3]Vec3{
 					vertices[vertexIndices[0]-1],
 					vertices[vertexIndices[1]-1],
