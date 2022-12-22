@@ -12,20 +12,23 @@ const (
 	MSPerFrame = (1000 / FPS)
 )
 
-// Data
 var (
-	leftButtonDown bool = false
-	currentMap     int
-
-	autorotate    = false
-	showTexture   = true
-	showWireframe = false
+	// Options
+	autorotate        = false
+	showTexture       = true
+	showWireframe     = false
+	showMapBackground = true
 
 	// Timing
 	previous uint32
 	delta    float64
 
-	model Model
+	// Controls
+	leftButtonDown = false
+
+	// Data
+	model      Model
+	currentMap int
 )
 
 type Engine struct {
@@ -75,6 +78,8 @@ func (e *Engine) processInput() {
 				e.prevMap()
 			case sdl.K_k:
 				e.nextMap()
+			case sdl.K_b:
+				e.toggleBackgorund()
 			}
 		case *sdl.MouseButtonEvent:
 			if t.Button == sdl.BUTTON_LEFT {
@@ -203,10 +208,21 @@ func (e *Engine) loadObj(file string) {
 	model.mesh = NewMeshFromObj(file)
 }
 
+func (e *Engine) toggleBackgorund() {
+	showMapBackground = !showMapBackground
+	if showMapBackground {
+		e.updateBackgroundTexture()
+	} else {
+		e.window.SetDefaultBackground()
+	}
+}
+
 func (e *Engine) setMap(n int) {
 	currentMap = n
 	model.mesh = e.reader.ReadMesh(n)
-	e.updateBackgroundTexture()
+	if showMapBackground {
+		e.updateBackgroundTexture()
+	}
 }
 
 func (e *Engine) updateBackgroundTexture() {

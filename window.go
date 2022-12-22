@@ -76,11 +76,8 @@ func newWindow(width, height int, fullscreen bool) *Window {
 	if err != nil {
 		panic(err)
 	}
-	bgBuffer := GenerateCheckerboard(width, height, LightGray, DarkGray)
-	// Update the texture since it possibly wont change unless a diff bg is used.
-	bgTexture.Update(nil, unsafe.Pointer(&bgBuffer[0]), width*4)
 
-	return &Window{
+	w := Window{
 		width:  width,
 		height: height,
 
@@ -91,6 +88,8 @@ func newWindow(width, height int, fullscreen bool) *Window {
 
 		colorbuffer: make([]Color, width*height),
 	}
+	w.SetDefaultBackground()
+	return &w
 }
 
 func (w *Window) SetPixel(x, y int, color Color) {
@@ -116,6 +115,12 @@ func (w *Window) Present() {
 
 	w.renderer.Present()
 	w.Clear(Transparent)
+}
+
+func (w *Window) SetDefaultBackground() {
+	// Update the texture since it possibly wont change unless a diff bg is used.
+	bgBuffer := GenerateCheckerboard(w.width, w.height, LightGray, DarkGray)
+	w.bgTexture.Update(nil, unsafe.Pointer(&bgBuffer[0]), w.width*4)
 }
 
 func (w *Window) Close() {
