@@ -67,7 +67,7 @@ func (c *Camera) AdjustZoom(f float64) {
 	c.updateProjectionMatrix()
 }
 
-func (c *Camera) changeProjection() {
+func (c *Camera) toggleProjection() {
 	if c.projection == Orthographic {
 		c.projection = Perspective
 	} else {

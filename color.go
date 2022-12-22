@@ -2,6 +2,8 @@ package main
 
 import (
 	"math/rand"
+
+	"github.com/veandco/go-sdl2/sdl"
 )
 
 var (
@@ -23,6 +25,10 @@ var (
 
 type Color struct {
 	R, G, B, A uint8
+}
+
+func (c Color) SDL() sdl.Color {
+	return sdl.Color{c.R, c.G, c.B, c.A}
 }
 
 func (c Color) isTrans() bool {

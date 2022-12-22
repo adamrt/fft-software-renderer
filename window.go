@@ -4,16 +4,26 @@ import (
 	"unsafe"
 
 	"github.com/veandco/go-sdl2/sdl"
+	"github.com/veandco/go-sdl2/ttf"
 )
 
+type TextTexture struct {
+	texture *sdl.Texture
+	rect    *sdl.Rect
+}
+
 type Window struct {
-	width       int
-	height      int
-	window      *sdl.Window
-	renderer    *sdl.Renderer
-	fgTexture   *sdl.Texture // Texture for colorbuffer
-	bgTexture   *sdl.Texture // Static texture for background
-	colorbuffer []Color
+	width  int
+	height int
+
+	window    *sdl.Window
+	renderer  *sdl.Renderer
+	fgTexture *sdl.Texture // Texture for colorbuffer
+	bgTexture *sdl.Texture // Static texture for background
+	font      *ttf.Font
+
+	colorbuffer  []Color
+	textTextures []TextTexture // Static texture for background
 }
 
 // NewWindowFullscreen returns a fullscreen window with
@@ -29,6 +39,10 @@ func NewWindow(width, height int) *Window {
 
 func newWindow(width, height int, fullscreen bool) *Window {
 	if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
+		panic(err)
+	}
+
+	if err := ttf.Init(); err != nil {
 		panic(err)
 	}
 
@@ -77,6 +91,10 @@ func newWindow(width, height int, fullscreen bool) *Window {
 		panic(err)
 	}
 
+	font, err := ttf.OpenFont("assets/arial.ttf", 16)
+	if err != nil {
+		panic(err)
+	}
 	w := Window{
 		width:  width,
 		height: height,
@@ -85,11 +103,26 @@ func newWindow(width, height int, fullscreen bool) *Window {
 		renderer:  renderer,
 		fgTexture: fgTexture,
 		bgTexture: bgTexture,
+		font:      font,
 
 		colorbuffer: make([]Color, width*height),
 	}
 	w.SetDefaultBackground()
 	return &w
+}
+
+func (w *Window) SetText(x, y int, text string, color Color) {
+	surface, err := w.font.RenderUTF8Blended(text, color.SDL())
+	if err != nil {
+		panic(err)
+	}
+	texture, err := w.renderer.CreateTextureFromSurface(surface)
+	if err != nil {
+		panic(err)
+	}
+	_, _, width, height, _ := texture.Query()
+	rect := &sdl.Rect{X: int32(x), Y: int32(y), W: width, H: height}
+	w.textTextures = append(w.textTextures, TextTexture{texture, rect})
 }
 
 func (w *Window) SetPixel(x, y int, color Color) {
@@ -112,9 +145,12 @@ func (w *Window) Present() {
 
 	w.renderer.Copy(w.bgTexture, nil, nil)
 	w.renderer.Copy(w.fgTexture, nil, nil)
-
+	for _, tt := range w.textTextures {
+		w.renderer.Copy(tt.texture, nil, tt.rect)
+	}
 	w.renderer.Present()
 	w.Clear(Transparent)
+	w.textTextures = w.textTextures[:0]
 }
 
 func (w *Window) SetDefaultBackground() {
@@ -125,7 +161,13 @@ func (w *Window) SetDefaultBackground() {
 
 func (w *Window) Close() {
 	w.fgTexture.Destroy()
+	w.bgTexture.Destroy()
+	for _, tt := range w.textTextures {
+		tt.texture.Destroy()
+	}
 	w.renderer.Destroy()
 	w.window.Destroy()
+	w.font.Close()
+	ttf.Quit()
 	sdl.Quit()
 }

@@ -15,9 +15,10 @@ const (
 var (
 	// Options
 	autorotate        = false
+	showHelp          = true
 	showTexture       = true
 	showWireframe     = false
-	showMapBackground = true
+	showMapBackground = false
 
 	// Timing
 	previous uint32
@@ -66,20 +67,22 @@ func (e *Engine) processInput() {
 			switch t.Keysym.Sym {
 			case sdl.K_ESCAPE:
 				e.isRunning = false
-			case sdl.K_SPACE:
+			case sdl.K_a:
 				autorotate = !autorotate
+			case sdl.K_h:
+				showHelp = !showHelp
 			case sdl.K_t:
 				showTexture = !showTexture
 			case sdl.K_w:
 				showWireframe = !showWireframe
 			case sdl.K_p:
-				e.camera.changeProjection()
+				e.camera.toggleProjection()
+			case sdl.K_b:
+				e.toggleBackgorund()
 			case sdl.K_j:
 				e.prevMap()
 			case sdl.K_k:
 				e.nextMap()
-			case sdl.K_b:
-				e.toggleBackgorund()
 			}
 		case *sdl.MouseButtonEvent:
 			if t.Button == sdl.BUTTON_LEFT {
@@ -193,6 +196,48 @@ func (e *Engine) render() {
 		}
 	}
 
+	var (
+		textHelp       = "[H]elp: Show"
+		textProj       = "[P]rojection: "
+		textBackground = "[B]ackground: "
+		textTexture    = "[T]exture: "
+		textWireframe  = "[W]ireframe: "
+		textAutorotate = "[A]uto rotate: "
+	)
+	if showHelp {
+		if e.camera.projection == Orthographic {
+			textProj += "Orthographic"
+		} else {
+			textProj += "Perspective"
+		}
+		if showMapBackground {
+			textBackground += "Map"
+		} else {
+			textBackground += "Default"
+		}
+		if showTexture {
+			textTexture += "Show"
+		} else {
+			textTexture += "Hide"
+		}
+		if showWireframe {
+			textWireframe += "Show"
+		} else {
+			textWireframe += "Hide"
+		}
+		if autorotate {
+			textAutorotate += "On"
+		} else {
+			textAutorotate += "Off"
+		}
+		e.window.SetText(10, 10, textHelp, White)
+		e.window.SetText(10, 40, textProj, White)
+		e.window.SetText(10, 70, textTexture, White)
+		e.window.SetText(10, 100, textWireframe, White)
+		e.window.SetText(10, 130, textBackground, White)
+		e.window.SetText(10, 160, textAutorotate, White)
+		e.window.SetText(10, 190, "[J/K] Next/Previous", White)
+	}
 	// Present
 	e.window.Present()
 
