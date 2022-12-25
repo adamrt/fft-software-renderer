@@ -230,6 +230,7 @@ func (e *Engine) render() {
 		} else {
 			textAutorotate += "Off"
 		}
+		e.window.TextBackground(200, 220, Color{255, 255, 255, 30})
 		e.window.SetText(10, 10, textHelp, White)
 		e.window.SetText(10, 40, textProj, White)
 		e.window.SetText(10, 70, textTexture, White)

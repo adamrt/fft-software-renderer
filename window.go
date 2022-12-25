@@ -125,6 +125,29 @@ func (w *Window) SetText(x, y int, text string, color Color) {
 	w.textTextures = append(w.textTextures, TextTexture{texture, rect})
 }
 
+func (w *Window) TextBackground(width, height int, color Color) {
+	texture, err := w.renderer.CreateTexture(uint32(sdl.PIXELFORMAT_RGBA32), sdl.TEXTUREACCESS_STREAMING, int32(width), int32(height))
+	if err != nil {
+		panic(err)
+	}
+	texture.SetBlendMode(sdl.BLENDMODE_BLEND)
+
+	buffer := make([]Color, width*height)
+	for x := 0; x < width; x++ {
+		for y := 0; y < height; y++ {
+			if x == 0 || y == 0 || x == width-1 || y == height-1 {
+				buffer[y*width+x] = White
+			} else {
+				buffer[y*width+x] = color
+			}
+		}
+	}
+
+	texture.Update(nil, unsafe.Pointer(&buffer[0]), width*4)
+	rect := &sdl.Rect{X: int32(0), Y: int32(0), W: int32(width), H: int32(height)}
+	w.textTextures = append(w.textTextures, TextTexture{texture, rect})
+}
+
 func (w *Window) SetPixel(x, y int, color Color) {
 	if x < 0 || x >= w.width || y < 0 || y >= w.height {
 		return
@@ -148,6 +171,7 @@ func (w *Window) Present() {
 	for _, tt := range w.textTextures {
 		w.renderer.Copy(tt.texture, nil, tt.rect)
 	}
+
 	w.renderer.Present()
 	w.Clear(Transparent)
 	w.textTextures = w.textTextures[:0]
