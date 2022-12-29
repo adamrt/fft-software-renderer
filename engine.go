@@ -246,10 +246,6 @@ func (e *Engine) render() {
 	model.trianglesToRender = model.trianglesToRender[:0]
 }
 
-func (e *Engine) renderModel(model *Model, viewMatrix Matrix) {
-
-}
-
 func (e *Engine) loadObj(file string) {
 	model.mesh = NewMeshFromObj(file)
 }

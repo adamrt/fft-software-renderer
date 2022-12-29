@@ -28,7 +28,7 @@ type Color struct {
 }
 
 func (c Color) SDL() sdl.Color {
-	return sdl.Color{c.R, c.G, c.B, c.A}
+	return sdl.Color{R: c.R, G: c.G, B: c.B, A: c.A}
 }
 
 func (c Color) isTrans() bool {
