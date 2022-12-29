@@ -22,24 +22,24 @@ const (
 	// little-endian).  The location's value will be the offset in bytes to the
 	// beginning of that data.  The mesh file If the locations value is a zero there
 	// is not intra-file data for that type.
-	ptrPrimaryMesh          = 0x40
-	ptrTexturePalettesColor = 0x44
-	ptrUnknown              = 0x4c // Only non-zero in MAP000.5
-	ptrLightsAndBackground  = 0x64 // Light colors/positions, bg gradient colors
-	ptrTerrain              = 0x68 // Tile heights, slopes, and surface types
-	ptrTextureAnimInst      = 0x6c
-	ptrPaletteAnimInst      = 0x70
-	ptrTexturePalettesGray  = 0x7c
-	ptrMeshAnimInst         = 0x8c
-	ptrAnimatedMesh1        = 0x90
-	ptrAnimatedMesh2        = 0x94
-	ptrAnimatedMesh3        = 0x98
-	ptrAnimatedMesh4        = 0x9c
-	ptrAnimatedMesh5        = 0xa0
-	ptrAnimatedMesh6        = 0xa4
-	ptrAnimatedMesh7        = 0xa8
-	ptrAnimatedMesh8        = 0xac
-	ptrVisibilityAngles     = 0xb0
+	locPrimaryMesh          = 0x40
+	locTexturePalettesColor = 0x44
+	locUnknown              = 0x4c // Only non-zero in MAP000.5
+	locLightsAndBackground  = 0x64 // Light colors/positions, bg gradient colors
+	locTerrain              = 0x68 // Tile heights, slopes, and surface types
+	locTextureAnimInst      = 0x6c
+	locPaletteAnimInst      = 0x70
+	locTexturePalettesGray  = 0x7c
+	locMeshAnimInst         = 0x8c
+	locAnimatedMesh1        = 0x90
+	locAnimatedMesh2        = 0x94
+	locAnimatedMesh3        = 0x98
+	locAnimatedMesh4        = 0x9c
+	locAnimatedMesh5        = 0xa0
+	locAnimatedMesh6        = 0xa4
+	locAnimatedMesh7        = 0xa8
+	locAnimatedMesh8        = 0xac
+	locVisibilityAngles     = 0xb0
 
 	// These are FFT texture specific.
 	textureWidth  int = 256
@@ -96,36 +96,6 @@ func (r Reader) readFile(sector int64, size int64) []byte {
 //
 // Mesh File Header
 //
-
-// meshFileHeader contains 32-bit unsigned little-endian pointers to an area of
-// the mesh data. Zero is returned if there is no pointer.
-type meshFileHeader []byte
-
-// Return the intra-file pointer for different parts of the mesh data.
-// All pointers are converted to int64 since thats what seek functions take
-func (h meshFileHeader) ptr(location int32) int64 {
-	const ptrLen = 4 // Intra-file pointers are always 32bit
-	return int64(binary.LittleEndian.Uint32(h[location : location+ptrLen]))
-}
-
-func (h meshFileHeader) PrimaryMesh() int64          { return h.ptr(ptrPrimaryMesh) }
-func (h meshFileHeader) TexturePalettesColor() int64 { return h.ptr(ptrTexturePalettesColor) }
-func (h meshFileHeader) Unknown() int64              { return h.ptr(ptrUnknown) }
-func (h meshFileHeader) LightsAndBackground() int64  { return h.ptr(ptrLightsAndBackground) }
-func (h meshFileHeader) Terrain() int64              { return h.ptr(ptrTerrain) }
-func (h meshFileHeader) TextureAnimInst() int64      { return h.ptr(ptrTextureAnimInst) }
-func (h meshFileHeader) PaletteAnimInst() int64      { return h.ptr(ptrPaletteAnimInst) }
-func (h meshFileHeader) TexturePalettesGray() int64  { return h.ptr(ptrTexturePalettesGray) }
-func (h meshFileHeader) MeshAnimInst() int64         { return h.ptr(ptrMeshAnimInst) }
-func (h meshFileHeader) AnimatedMesh1() int64        { return h.ptr(ptrAnimatedMesh1) }
-func (h meshFileHeader) AnimatedMesh2() int64        { return h.ptr(ptrAnimatedMesh2) }
-func (h meshFileHeader) AnimatedMesh3() int64        { return h.ptr(ptrAnimatedMesh3) }
-func (h meshFileHeader) AnimatedMesh4() int64        { return h.ptr(ptrAnimatedMesh4) }
-func (h meshFileHeader) AnimatedMesh5() int64        { return h.ptr(ptrAnimatedMesh5) }
-func (h meshFileHeader) AnimatedMesh6() int64        { return h.ptr(ptrAnimatedMesh6) }
-func (h meshFileHeader) AnimatedMesh7() int64        { return h.ptr(ptrAnimatedMesh7) }
-func (h meshFileHeader) AnimatedMesh8() int64        { return h.ptr(ptrAnimatedMesh8) }
-func (h meshFileHeader) VisibilityAngles() int64     { return h.ptr(ptrVisibilityAngles) }
 
 //
 // Mesh Header
@@ -204,13 +174,11 @@ func (r Reader) parseMesh(record GNSRecord) Mesh {
 	data := r.readFile(record.Sector(), record.Len())
 	f := MeshFile{data, 0}
 
-	fileHeader := meshFileHeader(f.data[0:meshFileHeaderLen])
-
 	// Primary mesh pointer tells us where the primary mesh data is.  I
 	// think this is always 196 as it starts directly after the header,
 	// which has a size of 196. Keep dynamic here as pointer access will
 	// grow and this keeps it consistent.
-	primaryMeshPointer := fileHeader.PrimaryMesh()
+	primaryMeshPointer := f.PtrPrimaryMesh()
 
 	// Previously we did these pointer checks on every map. But some maps
 	// (ie MAP002.GNS) don't have a primary mesh, only alternative. The location of that mesh
@@ -221,7 +189,7 @@ func (r Reader) parseMesh(record GNSRecord) Mesh {
 	}
 
 	// Skip ahead to color palettes
-	f.seekPointer(fileHeader.TexturePalettesColor())
+	f.seekPointer(f.PtrTexturePalettesColor())
 
 	palettes := make([]Palette, 16)
 	for i := 0; i < 16; i++ {
@@ -284,7 +252,7 @@ func (r Reader) parseMesh(record GNSRecord) Mesh {
 	}
 
 	// Skip ahead to lights
-	f.seekPointer(fileHeader.LightsAndBackground())
+	f.seekPointer(f.PtrLightsAndBackground())
 
 	directionalLights := f.readDirectionalLights()
 	ambientLight := f.readAmbientLight()
@@ -367,11 +335,36 @@ func (f *MeshFile) readInt8() int8   { return int8(f.readUint8()) }
 func (f *MeshFile) readInt16() int16 { return int16(f.readUint16()) }
 func (f *MeshFile) readInt32() int32 { return int32(f.readUint32()) }
 
-// seekPointer will seek to the specified sector, plus a little more, of the iso
-// file. This is useful when using MeshFileHeader intra-file pointers.
+// seekPointer will set the offset to an intrafile pointer. This is useful when using
+// MeshFile intra-file pointers.
 func (f *MeshFile) seekPointer(ptr int64) {
 	f.offset = ptr
 }
+
+// Return the intra-file pointer for different parts of the mesh data.
+// All pointers are converted to int64 since thats what seek functions take
+func (h MeshFile) pointer(loc int32) int64 {
+	return int64(binary.LittleEndian.Uint32(h.data[loc : loc+4]))
+}
+
+func (h MeshFile) PtrPrimaryMesh() int64          { return h.pointer(locPrimaryMesh) }
+func (h MeshFile) PtrTexturePalettesColor() int64 { return h.pointer(locTexturePalettesColor) }
+func (h MeshFile) PtrUnknown() int64              { return h.pointer(locUnknown) }
+func (h MeshFile) PtrLightsAndBackground() int64  { return h.pointer(locLightsAndBackground) }
+func (h MeshFile) PtrTerrain() int64              { return h.pointer(locTerrain) }
+func (h MeshFile) PtrTextureAnimInst() int64      { return h.pointer(locTextureAnimInst) }
+func (h MeshFile) PtrPaletteAnimInst() int64      { return h.pointer(locPaletteAnimInst) }
+func (h MeshFile) PtrTexturePalettesGray() int64  { return h.pointer(locTexturePalettesGray) }
+func (h MeshFile) PtrMeshAnimInst() int64         { return h.pointer(locMeshAnimInst) }
+func (h MeshFile) PtrAnimatedMesh1() int64        { return h.pointer(locAnimatedMesh1) }
+func (h MeshFile) PtrAnimatedMesh2() int64        { return h.pointer(locAnimatedMesh2) }
+func (h MeshFile) PtrAnimatedMesh3() int64        { return h.pointer(locAnimatedMesh3) }
+func (h MeshFile) PtrAnimatedMesh4() int64        { return h.pointer(locAnimatedMesh4) }
+func (h MeshFile) PtrAnimatedMesh5() int64        { return h.pointer(locAnimatedMesh5) }
+func (h MeshFile) PtrAnimatedMesh6() int64        { return h.pointer(locAnimatedMesh6) }
+func (h MeshFile) PtrAnimatedMesh7() int64        { return h.pointer(locAnimatedMesh7) }
+func (h MeshFile) PtrAnimatedMesh8() int64        { return h.pointer(locAnimatedMesh8) }
+func (h MeshFile) PtrVisibilityAngles() int64     { return h.pointer(locVisibilityAngles) }
 
 func (r *MeshFile) readVertex() Vec3 {
 
