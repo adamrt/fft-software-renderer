@@ -5,7 +5,7 @@
 // and we read them for a particular map until we hit a RecordTypeEnd.
 //
 // The GNSRecords contain the location of the data (texture, mesh data, etc) within the
-// ISO file. They also contain properties of the map such as time/weather.
+// bin file. They also contain properties of the scenario such as time/weather.
 package main
 
 import (
@@ -13,6 +13,23 @@ import (
 )
 
 type RecordType int
+
+func (t RecordType) String() string {
+	switch t {
+	case RecordTypeTexture:
+		return "Texture"
+	case RecordTypeMeshPrimary:
+		return "Primary Mesh"
+	case RecordTypeMeshOverride:
+		return "Override Mesh"
+	case RecordTypeMeshAlt:
+		return "Alt Mesh"
+	case RecordTypeEnd:
+		return "End"
+	default:
+		return "UNKNOWN"
+	}
+}
 
 const (
 	RecordTypeTexture      RecordType = 0x1701
@@ -32,12 +49,40 @@ const (
 	WeatherVeryStrong MapWeather = 0x4
 )
 
+func (w MapWeather) String() string {
+	switch w {
+	case WeatherNone:
+		return "None"
+	case WeatherNoneAlt:
+		return "NoneAlt"
+	case WeatherNormal:
+		return "Normal"
+	case WeatherStrong:
+		return "Strong"
+	case WeatherVeryStrong:
+		return "VeryStrong"
+	default:
+		return "UNKNOWN"
+	}
+}
+
 type MapTime int8
 
 const (
 	TimeDay   MapTime = 0x0
 	TimeNight MapTime = 0x1
 )
+
+func (t MapTime) String() string {
+	switch t {
+	case TimeDay:
+		return "Day"
+	case TimeNight:
+		return "Night"
+	default:
+		return "UNKNOWN"
+	}
+}
 
 type GNSRecord []byte
 

@@ -285,26 +285,6 @@ func (r Reader) readGNSRecords(mapNum int) []GNSRecord {
 	return records
 }
 
-// textureSplitPixels takes the ISO's raw bytes and splits each of them into two
-// bytes. The ISO has two pixels per byte to save space. We want each pixel independent,
-// so we split them here. The pixel values are just an index into a color palette so the
-// values are 0-15.
-func textureSplitPixels(buf []uint8) []Color {
-	data := make([]Color, 0)
-	for i := 0; i < textureRawLen; i++ {
-		colorA := uint8(buf[i] & 0x0F)
-		colorB := uint8((buf[i] & 0xF0) >> 4)
-
-		// We dont care about RGB here.
-		// This is just an index to the palette.
-		data = append(data,
-			Color{R: colorA, G: colorA, B: colorA, A: 255},
-			Color{R: colorB, G: colorB, B: colorB, A: 255},
-		)
-	}
-	return data
-}
-
 type MeshFile struct {
 	data   []byte
 	offset int64
@@ -367,7 +347,6 @@ func (h MeshFile) PtrAnimatedMesh8() int64        { return h.pointer(locAnimated
 func (h MeshFile) PtrVisibilityAngles() int64     { return h.pointer(locVisibilityAngles) }
 
 func (r *MeshFile) readVertex() Vec3 {
-
 	// Normals and light direction need to be normalized after this.
 	x := float64(r.readInt16()) / 4096.0
 	y := float64(r.readInt16()) / 4096.0
@@ -533,4 +512,24 @@ func (r *MeshFile) readBackground() Background {
 func processTexCoords(uv Tex, page int) Tex {
 	v := float64(int(uv.V) + page*256)
 	return Tex{U: uv.U / 255, V: v / 1023.0}
+}
+
+// textureSplitPixels takes the ISO's raw bytes and splits each of them into two
+// bytes. The ISO has two pixels per byte to save space. We want each pixel independent,
+// so we split them here. The pixel values are just an index into a color palette so the
+// values are 0-15.
+func textureSplitPixels(buf []uint8) []Color {
+	data := make([]Color, 0)
+	for i := 0; i < textureRawLen; i++ {
+		colorA := uint8(buf[i] & 0x0F)
+		colorB := uint8((buf[i] & 0xF0) >> 4)
+
+		// We dont care about RGB here.
+		// This is just an index to the palette.
+		data = append(data,
+			Color{R: colorA, G: colorA, B: colorA, A: 255},
+			Color{R: colorB, G: colorB, B: colorB, A: 255},
+		)
+	}
+	return data
 }
