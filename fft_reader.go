@@ -1,9 +1,4 @@
-// This file contains a way to read binary data from the FFT ISO.
-// It should be expanded to also read the FFT bin file.
-//
-// It contains the low level methods for different sized ints/uints as well has
-// some simple geometry parsing. The higher level iso parsing happens in mesh.go.
-// The split is somewhat arbitrary.
+// This file contains a way to read binary data from the FFT bin file.
 package main
 
 import (
@@ -14,7 +9,37 @@ import (
 )
 
 const (
-	sectorSize int64 = 2048
+	sectorSize       = 2048
+	sectorRawSize    = 2352
+	sectorHeaderSize = 24
+
+	// This contains the pointers below.
+	meshFileHeaderLen = 196
+	// This contains the info about the geometry section of the mesh.
+	meshHeaderLen = 8
+
+	// Each of these values are the location of an intra-file pointer (32-bit unsigned
+	// little-endian).  The location's value will be the offset in bytes to the
+	// beginning of that data.  The mesh file If the locations value is a zero there
+	// is not intra-file data for that type.
+	ptrPrimaryMesh          = 0x40
+	ptrTexturePalettesColor = 0x44
+	ptrUnknown              = 0x4c // Only non-zero in MAP000.5
+	ptrLightsAndBackground  = 0x64 // Light colors/positions, bg gradient colors
+	ptrTerrain              = 0x68 // Tile heights, slopes, and surface types
+	ptrTextureAnimInst      = 0x6c
+	ptrPaletteAnimInst      = 0x70
+	ptrTexturePalettesGray  = 0x7c
+	ptrMeshAnimInst         = 0x8c
+	ptrAnimatedMesh1        = 0x90
+	ptrAnimatedMesh2        = 0x94
+	ptrAnimatedMesh3        = 0x98
+	ptrAnimatedMesh4        = 0x9c
+	ptrAnimatedMesh5        = 0xa0
+	ptrAnimatedMesh6        = 0xa4
+	ptrAnimatedMesh7        = 0xa8
+	ptrAnimatedMesh8        = 0xac
+	ptrVisibilityAngles     = 0xb0
 
 	// These are FFT texture specific.
 	textureWidth  int = 256
@@ -41,258 +66,40 @@ func (r Reader) Close() {
 
 // seekSector will seek to the specified sector of the file.
 func (r Reader) seekSector(sector int64) {
-	to := sector * sectorSize
+	to := sector*sectorRawSize + sectorHeaderSize
 	_, err := r.file.Seek(to, 0)
 	if err != nil {
 		log.Fatalf("seek to sector: %v", err)
 	}
 }
 
-// seekPointer will seek to the specified sector, plus a little more, of the iso
-// file. This is useful when using MeshFileHeader intra-file pointers.
-func (r Reader) seekPointer(sector int64, ptr int64) {
-	to := sector*sectorSize + ptr
-	_, err := r.file.Seek(to, 0)
-	if err != nil {
-		log.Fatalf("seek to pointer: %v", err)
-	}
-}
-
-func (r Reader) readUint8() uint8 {
-	size := 1
-	data := make([]byte, size)
+func (r Reader) readSector(sector int64) []byte {
+	r.seekSector(sector)
+	data := make([]byte, sectorSize)
 	n, err := r.file.Read(data)
-	if err != nil || n != size {
-		log.Fatal(err)
+	if err != nil || n != sectorSize {
+		log.Fatal("failed to read sector data", err)
 	}
-	return data[0]
+	return data
 }
 
-func (r Reader) readUint16() uint16 {
-	size := 2
-	data := make([]byte, size)
-	n, err := r.file.Read(data)
-	if err != nil || n != size {
-		log.Fatal(err)
+func (r Reader) readFile(sector int64, size int64) []byte {
+	occupiedSectors := int64(math.Ceil(float64(size) / float64(sectorSize)))
+	data := make([]byte, 0)
+	for i := int64(0); i < occupiedSectors; i++ {
+		sectorData := r.readSector(sector + i)
+		data = append(data, sectorData...)
 	}
-	return binary.LittleEndian.Uint16(data)
-}
-
-func (r Reader) readUint32() uint32 {
-	size := 4
-	data := make([]byte, size)
-	n, err := r.file.Read(data)
-	if err != nil || n != size {
-		log.Fatal(err)
-	}
-	return binary.LittleEndian.Uint32(data)
-}
-
-func (r Reader) readInt8() int8   { return int8(r.readUint8()) }
-func (r Reader) readInt16() int16 { return int16(r.readUint16()) }
-func (r Reader) readInt32() int32 { return int32(r.readUint32()) }
-
-func (r Reader) readVertex() Vec3 {
-
-	// Normals and light direction need to be normalized after this.
-	x := float64(r.readInt16()) / 4096.0
-	y := float64(r.readInt16()) / 4096.0
-	z := float64(r.readInt16()) / 4096.0
-	return Vec3{x: x, y: -y, z: z}
-}
-
-func (r Reader) readTriangle() Triangle {
-	a := r.readVertex()
-	b := r.readVertex()
-	c := r.readVertex()
-	return Triangle{vertices: [3]Vec3{a, b, c}, color: White}
-}
-
-func (r Reader) readQuad() []Triangle {
-	a := r.readVertex()
-	b := r.readVertex()
-	c := r.readVertex()
-	d := r.readVertex()
-	return []Triangle{
-		{vertices: [3]Vec3{a, b, c}, color: White},
-		{vertices: [3]Vec3{b, d, c}, color: White},
-	}
-}
-
-func (r Reader) readNormal() Vec3 {
-	x := r.readF1x3x12()
-	y := r.readF1x3x12()
-	z := r.readF1x3x12()
-	return Vec3{x: x, y: -y, z: z}
-}
-
-func (r Reader) readTriNormal() [3]Vec3 {
-	a := r.readNormal()
-	b := r.readNormal()
-	c := r.readNormal()
-	return [3]Vec3{a, b, c}
-}
-
-func (r Reader) readQuadNormal() [][3]Vec3 {
-	a := r.readNormal()
-	b := r.readNormal()
-	c := r.readNormal()
-	d := r.readNormal()
-	return [][3]Vec3{
-		{a, b, c},
-		{b, d, c},
-	}
-}
-
-func (r Reader) readUV() Tex {
-	x := float64(r.readUint8())
-	y := float64(r.readUint8())
-	return Tex{U: x, V: y}
-}
-
-func (r Reader) readTriUV() ([3]Tex, int) {
-	a := r.readUV()
-	palette := int(r.readUint8() & 0b1111)
-	r.readUint8() // padding
-	b := r.readUV()
-	page := int(r.readUint8() & 0b11) // only 2 bits
-	r.readUint8()                     // padding
-	c := r.readUV()
-
-	a = processTexCoords(a, page)
-	b = processTexCoords(b, page)
-	c = processTexCoords(c, page)
-
-	return [3]Tex{a, b, c}, palette
-}
-
-func (r Reader) readQuadUV() ([2][3]Tex, int) {
-	a := r.readUV()
-	palette := int(r.readUint8() & 0b1111)
-	r.readUint8() // padding
-	b := r.readUV()
-	page := int(r.readUint8() & 0b11) // only 2 bits
-	r.readUint8()                     // padding
-	c := r.readUV()
-	d := r.readUV()
-
-	a = processTexCoords(a, page)
-	b = processTexCoords(b, page)
-	c = processTexCoords(c, page)
-	d = processTexCoords(d, page)
-
-	return [2][3]Tex{{a, b, c}, {b, d, c}}, palette
-
-}
-
-func (r Reader) readF1x3x12() float64 {
-	return float64(r.readInt16()) / 4096.0
-}
-
-func (r Reader) readRGB8() Color {
-	return Color{
-		R: r.readUint8(),
-		G: r.readUint8(),
-		B: r.readUint8(),
-		A: 255,
-	}
-}
-
-func (mr Reader) readRGB15() Color {
-	val := mr.readUint16()
-	var a uint8
-	if val == 0 {
-		a = 0x00
-	} else {
-		a = 0xFF
-	}
-
-	b := uint8((val & 0b01111100_00000000) >> 7)
-	g := uint8((val & 0b00000011_11100000) >> 2)
-	r := uint8((val & 0b00000000_00011111) << 3)
-	return Color{R: r, G: g, B: b, A: a}
-}
-
-func (r Reader) readLightColor() uint8 {
-	val := r.readF1x3x12()
-	return uint8(255 * math.Min(math.Max(0.0, val), 1.0))
-}
-
-func (r Reader) readDirectionalLights() []DirectionalLight {
-	l1r, l2r, l3r := r.readLightColor(), r.readLightColor(), r.readLightColor()
-	l1g, l2g, l3g := r.readLightColor(), r.readLightColor(), r.readLightColor()
-	l1b, l2b, l3b := r.readLightColor(), r.readLightColor(), r.readLightColor()
-
-	l1color := Color{R: l1r, G: l1g, B: l1b, A: 255}
-	l2color := Color{R: l2r, G: l2g, B: l2b, A: 255}
-	l3color := Color{R: l3r, G: l3g, B: l3b, A: 255}
-
-	l1pos, l2pos, l3pos := r.readVertex(), r.readVertex(), r.readVertex()
-
-	return []DirectionalLight{
-		{position: l1pos, color: l1color},
-		{position: l2pos, color: l2color},
-		{position: l3pos, color: l3color},
-	}
-}
-
-func (r Reader) readAmbientLight() AmbientLight {
-	color := r.readRGB8()
-	return AmbientLight{color: color}
-
-}
-
-func (r Reader) readBackground() Background {
-	top := r.readRGB8()
-	bottom := r.readRGB8()
-	return Background{Top: top, Bottom: bottom}
-}
-
-// processTexCoords has two functions:
-//
-// 1. Update the V coordinate to the specific page of the texture. FFT Textures
-// have 4 pages (256x1024) and the original V specifies the pixel on one of the
-// 4 pages. Multiple the page by the height of a single page (256).
-//
-// 2. Normalize the coordinates that can be U: 0-255 and V: 0-1023. Just divide
-// them by their max to get a 0.0-1.0 value.
-func processTexCoords(uv Tex, page int) Tex {
-	v := float64(int(uv.V) + page*256)
-	return Tex{U: uv.U / 255, V: v / 1023.0}
+	return data[0:size]
 }
 
 //
 // Mesh File Header
 //
 
-// Table of pointers contained in the meshFileHeader.
-const (
-	ptrPrimaryMesh          = 0x40
-	ptrTexturePalettesColor = 0x44
-	ptrUnknown              = 0x4c // Only non-zero in MAP000.5
-	ptrLightsAndBackground  = 0x64 // Light colors/positions, bg gradient colors
-	ptrTerrain              = 0x68 // Tile heights, slopes, and surface types
-	ptrTextureAnimInst      = 0x6c
-	ptrPaletteAnimInst      = 0x70
-	ptrTexturePalettesGray  = 0x7c
-	ptrMeshAnimInst         = 0x8c
-	ptrAnimatedMesh1        = 0x90
-	ptrAnimatedMesh2        = 0x94
-	ptrAnimatedMesh3        = 0x98
-	ptrAnimatedMesh4        = 0x9c
-	ptrAnimatedMesh5        = 0xa0
-	ptrAnimatedMesh6        = 0xa4
-	ptrAnimatedMesh7        = 0xa8
-	ptrAnimatedMesh8        = 0xac
-	ptrVisibilityAngles     = 0xb0
-)
-
 // meshFileHeader contains 32-bit unsigned little-endian pointers to an area of
 // the mesh data. Zero is returned if there is no pointer.
 type meshFileHeader []byte
-
-// meshFileHeaderLen is the length in bytes.
-const meshFileHeaderLen = 196
 
 // Return the intra-file pointer for different parts of the mesh data.
 // All pointers are converted to int64 since thats what seek functions take
@@ -330,9 +137,6 @@ func (h meshFileHeader) VisibilityAngles() int64     { return h.ptr(ptrVisibilit
 // These method names have been used as a references to FFHacktics naming.
 type meshHeader []byte
 
-// meshHeaderLen is the length in bytes.
-const meshHeaderLen = 8
-
 func (h meshHeader) N() int {
 	return int(binary.LittleEndian.Uint16(h[0:2]))
 }
@@ -367,11 +171,10 @@ func (r Reader) ReadMesh(mapNum int) Mesh {
 		} else if record.Type() == RecordTypeMeshPrimary {
 			mesh = r.parseMesh(record)
 		} else if record.Type() == RecordTypeMeshAlt {
-			// Sometimes there is no primary mesh (ie MAP002.GNS),
-			// there is only an alternate. I'm not sure why. So we
-			// treat this one as the primary, only if the primary
-			// hasn't been set. Kinda Hacky until we start treating
-			// each GNS Record as a Scenario.
+			// Sometimes there is no primary mesh (ie MAP002.GNS), there is
+			// only an alternate. I'm not sure why. So we treat this one as
+			// the primary, only if the primary hasn't been set. Kinda Hacky
+			// until we start treating each GNS Record as a Scenario.
 			if len(mesh.triangles) == 0 {
 				mesh = r.parseMesh(record)
 			}
@@ -391,27 +194,17 @@ func (r Reader) ReadMesh(mapNum int) Mesh {
 
 // parseTexture reads and returns an FFT texture as an engine Texture.
 func (r Reader) parseTexture(record GNSRecord) Texture {
-	r.seekSector(record.Sector())
-	data := make([]byte, record.Len())
-	n, err := r.file.Read(data)
-	if err != nil || int64(n) != record.Len() {
-		log.Fatalf("read texture data: %v", err)
-	}
+	data := r.readFile(record.Sector(), record.Len())
 	pixels := textureSplitPixels(data)
 	return NewTexture(textureWidth, textureHeight, pixels)
 }
 
 // parseMesh reads mesh data for primary and alternate meshes.
-//
 func (r Reader) parseMesh(record GNSRecord) Mesh {
-	r.seekSector(record.Sector())
+	data := r.readFile(record.Sector(), record.Len())
+	f := MeshFile{data, 0}
 
-	// File header contains intra-file pointers to areas of mesh data.
-	fileHeader := make(meshFileHeader, meshFileHeaderLen)
-	n, err := r.file.Read(fileHeader)
-	if err != nil || int64(n) != meshFileHeaderLen {
-		log.Fatalf("read mesh file header: %v", err)
-	}
+	fileHeader := meshFileHeader(f.data[0:meshFileHeaderLen])
 
 	// Primary mesh pointer tells us where the primary mesh data is.  I
 	// think this is always 196 as it starts directly after the header,
@@ -428,40 +221,37 @@ func (r Reader) parseMesh(record GNSRecord) Mesh {
 	}
 
 	// Skip ahead to color palettes
-	r.seekPointer(record.Sector(), fileHeader.TexturePalettesColor())
+	f.seekPointer(fileHeader.TexturePalettesColor())
 
 	palettes := make([]Palette, 16)
 	for i := 0; i < 16; i++ {
 		palette := make(Palette, 16)
 		for j := 0; j < 16; j++ {
-			palette[j] = r.readRGB15()
+			palette[j] = f.readRGB15()
 		}
 		palettes[i] = palette
 	}
 
 	// Seek to the mesh data.
-	r.seekPointer(record.Sector(), primaryMeshPointer)
+	f.seekPointer(primaryMeshPointer)
 
 	// Mesh header contains the number of triangles and quads that exist.
-	header := make(meshHeader, meshHeaderLen)
-	n, err = r.file.Read(header)
-	if err != nil || int64(n) != meshHeaderLen {
-		log.Fatalf("read mesh file header: %v", err)
-	}
+	header := meshHeader(f.data[f.offset : f.offset+meshHeaderLen])
+	f.offset += meshHeaderLen
 
 	// FIXME: Change capacity from TT to total with untextured.
 	triangles := make([]Triangle, 0, header.TT())
 	for i := 0; i < header.N(); i++ {
-		triangles = append(triangles, r.readTriangle())
+		triangles = append(triangles, f.readTriangle())
 	}
 	for i := 0; i < header.P(); i++ {
-		triangles = append(triangles, r.readQuad()...)
+		triangles = append(triangles, f.readQuad()...)
 	}
 	for i := 0; i < header.Q(); i++ {
-		triangles = append(triangles, r.readTriangle())
+		triangles = append(triangles, f.readTriangle())
 	}
 	for i := 0; i < header.R(); i++ {
-		triangles = append(triangles, r.readQuad()...)
+		triangles = append(triangles, f.readQuad()...)
 	}
 
 	// Normals
@@ -470,22 +260,22 @@ func (r Reader) parseMesh(record GNSRecord) Mesh {
 	// next.  This could be cleaned up as a seek, but we may eventually use
 	// the normal data here.
 	for i := 0; i < header.N(); i++ {
-		triangles[i].normals = r.readTriNormal()
+		triangles[i].normals = f.readTriNormal()
 	}
 	for i := header.N(); i < header.TT(); i = i + 2 {
-		qns := r.readQuadNormal()
+		qns := f.readQuadNormal()
 		triangles[i].normals = qns[0]
 		triangles[i+1].normals = qns[1]
 	}
 
 	// Polygon texture data
 	for i := 0; i < header.N(); i++ {
-		uv, palette := r.readTriUV()
+		uv, palette := f.readTriUV()
 		triangles[i].texcoords = uv
 		triangles[i].palette = palettes[palette]
 	}
 	for i := header.N(); i < header.TT(); i = i + 2 {
-		uvs, palette := r.readQuadUV()
+		uvs, palette := f.readQuadUV()
 		triangles[i].texcoords = uvs[0]
 		triangles[i].palette = palettes[palette]
 
@@ -494,11 +284,11 @@ func (r Reader) parseMesh(record GNSRecord) Mesh {
 	}
 
 	// Skip ahead to lights
-	r.seekPointer(record.Sector(), fileHeader.LightsAndBackground())
+	f.seekPointer(fileHeader.LightsAndBackground())
 
-	directionalLights := r.readDirectionalLights()
-	ambientLight := r.readAmbientLight()
-	background := r.readBackground()
+	directionalLights := f.readDirectionalLights()
+	ambientLight := f.readAmbientLight()
+	background := f.readBackground()
 
 	return Mesh{
 		triangles:         triangles,
@@ -531,7 +321,7 @@ func (r Reader) readGNSRecords(mapNum int) []GNSRecord {
 // bytes. The ISO has two pixels per byte to save space. We want each pixel independent,
 // so we split them here. The pixel values are just an index into a color palette so the
 // values are 0-15.
-func textureSplitPixels(buf []byte) []Color {
+func textureSplitPixels(buf []uint8) []Color {
 	data := make([]Color, 0)
 	for i := 0; i < textureRawLen; i++ {
 		colorA := uint8(buf[i] & 0x0F)
@@ -545,4 +335,209 @@ func textureSplitPixels(buf []byte) []Color {
 		)
 	}
 	return data
+}
+
+type MeshFile struct {
+	data   []byte
+	offset int64
+}
+
+func (f *MeshFile) readUint8() uint8 {
+	var size int64 = 1
+	data := f.data[f.offset]
+	f.offset += size
+	return data
+}
+
+func (f *MeshFile) readUint16() uint16 {
+	var size int64 = 2
+	value := binary.LittleEndian.Uint16(f.data[f.offset : f.offset+size])
+	f.offset += size
+	return value
+}
+
+func (f *MeshFile) readUint32() uint32 {
+	var size int64 = 4
+	value := binary.LittleEndian.Uint32(f.data[f.offset : f.offset+size])
+	f.offset += size
+	return value
+}
+
+func (f *MeshFile) readInt8() int8   { return int8(f.readUint8()) }
+func (f *MeshFile) readInt16() int16 { return int16(f.readUint16()) }
+func (f *MeshFile) readInt32() int32 { return int32(f.readUint32()) }
+
+// seekPointer will seek to the specified sector, plus a little more, of the iso
+// file. This is useful when using MeshFileHeader intra-file pointers.
+func (f *MeshFile) seekPointer(ptr int64) {
+	f.offset = ptr
+}
+
+func (r *MeshFile) readVertex() Vec3 {
+
+	// Normals and light direction need to be normalized after this.
+	x := float64(r.readInt16()) / 4096.0
+	y := float64(r.readInt16()) / 4096.0
+	z := float64(r.readInt16()) / 4096.0
+	return Vec3{x: x, y: -y, z: z}
+}
+
+func (r *MeshFile) readTriangle() Triangle {
+	a := r.readVertex()
+	b := r.readVertex()
+	c := r.readVertex()
+	return Triangle{vertices: [3]Vec3{a, b, c}, color: White}
+}
+
+func (r *MeshFile) readQuad() []Triangle {
+	a := r.readVertex()
+	b := r.readVertex()
+	c := r.readVertex()
+	d := r.readVertex()
+	return []Triangle{
+		{vertices: [3]Vec3{a, b, c}, color: White},
+		{vertices: [3]Vec3{b, d, c}, color: White},
+	}
+}
+
+func (r *MeshFile) readNormal() Vec3 {
+	x := r.readF1x3x12()
+	y := r.readF1x3x12()
+	z := r.readF1x3x12()
+	return Vec3{x: x, y: -y, z: z}
+}
+
+func (r *MeshFile) readTriNormal() [3]Vec3 {
+	a := r.readNormal()
+	b := r.readNormal()
+	c := r.readNormal()
+	return [3]Vec3{a, b, c}
+}
+
+func (r *MeshFile) readQuadNormal() [][3]Vec3 {
+	a := r.readNormal()
+	b := r.readNormal()
+	c := r.readNormal()
+	d := r.readNormal()
+	return [][3]Vec3{
+		{a, b, c},
+		{b, d, c},
+	}
+}
+
+func (r *MeshFile) readUV() Tex {
+	x := float64(r.readUint8())
+	y := float64(r.readUint8())
+	return Tex{U: x, V: y}
+}
+
+func (r *MeshFile) readTriUV() ([3]Tex, int) {
+	a := r.readUV()
+	palette := int(r.readUint8() & 0b1111)
+	r.readUint8() // padding
+	b := r.readUV()
+	page := int(r.readUint8() & 0b11) // only 2 bits
+	r.readUint8()                     // padding
+	c := r.readUV()
+
+	a = processTexCoords(a, page)
+	b = processTexCoords(b, page)
+	c = processTexCoords(c, page)
+
+	return [3]Tex{a, b, c}, palette
+}
+
+func (r *MeshFile) readQuadUV() ([2][3]Tex, int) {
+	a := r.readUV()
+	palette := int(r.readUint8() & 0b1111)
+	r.readUint8() // padding
+	b := r.readUV()
+	page := int(r.readUint8() & 0b11) // only 2 bits
+	r.readUint8()                     // padding
+	c := r.readUV()
+	d := r.readUV()
+
+	a = processTexCoords(a, page)
+	b = processTexCoords(b, page)
+	c = processTexCoords(c, page)
+	d = processTexCoords(d, page)
+
+	return [2][3]Tex{{a, b, c}, {b, d, c}}, palette
+
+}
+
+func (r *MeshFile) readF1x3x12() float64 {
+	return float64(r.readInt16()) / 4096.0
+}
+
+func (r *MeshFile) readRGB8() Color {
+	return Color{
+		R: r.readUint8(),
+		G: r.readUint8(),
+		B: r.readUint8(),
+		A: 255,
+	}
+}
+
+func (mr *MeshFile) readRGB15() Color {
+	val := mr.readUint16()
+	var a uint8
+	if val == 0 {
+		a = 0x00
+	} else {
+		a = 0xFF
+	}
+
+	b := uint8((val & 0b01111100_00000000) >> 7)
+	g := uint8((val & 0b00000011_11100000) >> 2)
+	r := uint8((val & 0b00000000_00011111) << 3)
+	return Color{R: r, G: g, B: b, A: a}
+}
+
+func (r *MeshFile) readLightColor() uint8 {
+	val := r.readF1x3x12()
+	return uint8(255 * math.Min(math.Max(0.0, val), 1.0))
+}
+
+func (r *MeshFile) readDirectionalLights() []DirectionalLight {
+	l1r, l2r, l3r := r.readLightColor(), r.readLightColor(), r.readLightColor()
+	l1g, l2g, l3g := r.readLightColor(), r.readLightColor(), r.readLightColor()
+	l1b, l2b, l3b := r.readLightColor(), r.readLightColor(), r.readLightColor()
+
+	l1color := Color{R: l1r, G: l1g, B: l1b, A: 255}
+	l2color := Color{R: l2r, G: l2g, B: l2b, A: 255}
+	l3color := Color{R: l3r, G: l3g, B: l3b, A: 255}
+
+	l1pos, l2pos, l3pos := r.readVertex(), r.readVertex(), r.readVertex()
+
+	return []DirectionalLight{
+		{position: l1pos, color: l1color},
+		{position: l2pos, color: l2color},
+		{position: l3pos, color: l3color},
+	}
+}
+
+func (r *MeshFile) readAmbientLight() AmbientLight {
+	color := r.readRGB8()
+	return AmbientLight{color: color}
+
+}
+
+func (r *MeshFile) readBackground() Background {
+	top := r.readRGB8()
+	bottom := r.readRGB8()
+	return Background{Top: top, Bottom: bottom}
+}
+
+// processTexCoords has two functions:
+//
+// 1. Update the V coordinate to the specific page of the texture. FFT Textures
+// have 4 pages (256x1024) and the original V specifies the pixel on one of the
+// 4 pages. Multiple the page by the height of a single page (256).
+//
+// 2. Normalize the coordinates that can be U: 0-255 and V: 0-1023. Just divide
+// them by their max to get a 0.0-1.0 value.
+func processTexCoords(uv Tex, page int) Tex {
+	v := float64(int(uv.V) + page*256)
+	return Tex{U: uv.U / 255, V: v / 1023.0}
 }

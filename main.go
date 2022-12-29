@@ -10,7 +10,7 @@ func main() {
 	window := NewWindow(windowWidth, windowHeight)
 	defer window.Close()
 	renderer := NewRenderer(window)
-	reader := NewReader("/home/adam/tmp/fft.iso")
+	reader := NewReader("/home/adam/tmp/fft.bin")
 
 	engine := NewEngine(window, renderer, reader)
 	engine.setMap(49)
