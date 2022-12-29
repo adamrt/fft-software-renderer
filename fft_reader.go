@@ -134,17 +134,18 @@ func (r Reader) ReadMesh(mapNum int) Mesh {
 
 	textures := []Texture{}
 	var mesh Mesh
+
 	for _, record := range records {
-		if record.Type() == RecordTypeTexture {
-			texture := r.parseTexture(record)
-			textures = append(textures, texture)
-		} else if record.Type() == RecordTypeMeshPrimary {
+		switch record.Type() {
+		case RecordTypeTexture:
+			textures = append(textures, r.parseTexture(record))
+		case RecordTypeMeshPrimary:
 			mesh = r.parseMesh(record)
-		} else if record.Type() == RecordTypeMeshAlt {
+		case RecordTypeMeshOverride:
 			// Sometimes there is no primary mesh (ie MAP002.GNS), there is
-			// only an alternate. I'm not sure why. So we treat this one as
-			// the primary, only if the primary hasn't been set. Kinda Hacky
-			// until we start treating each GNS Record as a Scenario.
+			// only an override. Usually a non-battle map. So we treat this
+			// one as the primary, only if the primary hasn't been set. Kinda
+			// Hacky until we start treating each GNS Record as a Scenario.
 			if len(mesh.triangles) == 0 {
 				mesh = r.parseMesh(record)
 			}
