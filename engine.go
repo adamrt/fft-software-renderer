@@ -277,7 +277,7 @@ func (e *Engine) updateBackgroundTexture() {
 	for y := 0; y < e.window.height; y++ {
 		color := bg.At(y, e.window.height)
 		for x := 0; x < e.window.width; x++ {
-			bgBuffer[(e.window.width*y)+x] = color
+			bgBuffer[(e.window.width*(e.window.height-y-1))+x] = color
 		}
 	}
 	e.window.bgTexture.Update(nil, unsafe.Pointer(&bgBuffer[0]), e.window.width*4)
