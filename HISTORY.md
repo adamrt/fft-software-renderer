@@ -80,6 +80,14 @@ of the ones I referred to the most.
   is memory usage is high.
 
 # Daily Notes
+## 2022-12-28
+Fix gaps in textures due to rounder errors when drawing textured
+triangles.
+
+## 2022-12-17
+
+Read FFT ISO. Add texture mapping and orbital controls.
+
 ## 2022-12-16
 
 Today I started rasterizing triangles (filling them). This uses the
@@ -93,7 +101,7 @@ algorithms, but I don't care for now. I'll be using textures for most
 faces anyway.
 
 Painters algorithm was used to help with triangle depth ordering. Its
-a naive approach for depth sorting, but we don't have (any may not
+a naive approach for depth sorting, but we don't have (and may not
 need) a depth buffer.
 
 I added simple lighting as well. I thought it wasn't working because
@@ -107,9 +115,9 @@ set it up. The z rotation was noticably off once I was looking at a
 cube.
 
 There was also a bug in the backface culling code. I had originally
-switching the order of the forumla thinking that I was compensating
-for CW/CCW winding orders, but it turned out to already be correct the
-way it was in the Stack Overflow answer.
+switched the order of the forumla thinking that I was compensating for
+CW/CCW winding orders, but it turned out to already be correct the way
+it was in the Stack Overflow answer.
 
 
 ### Results

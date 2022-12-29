@@ -132,8 +132,8 @@ func (r *Renderer) DrawTexturedTriangle(
 
 	if by-ay != 0 {
 		for y := ay; y <= by; y++ {
-			var xStart int = bx + int(float64(y-by)*invSlope1)
-			var xEnd int = ax + int(float64(y-ay)*invSlope2)
+			var xStart int = int(float64(bx) + (float64(y-by) * invSlope1))
+			var xEnd int = int(float64(ax) + (float64(y-ay) * invSlope2))
 
 			if xEnd < xStart {
 				xStart, xEnd = xEnd, xStart // swap if xStart is to the right of xEnd
@@ -161,8 +161,8 @@ func (r *Renderer) DrawTexturedTriangle(
 
 	if cy-by != 0 {
 		for y := by; y <= cy; y++ {
-			var xStart int = bx + int(float64(y-by)*invSlope1)
-			var xEnd int = ax + int(float64(y-ay)*invSlope2)
+			var xStart int = int(float64(bx) + (float64(y-by) * invSlope1))
+			var xEnd int = int(float64(ax) + (float64(y-ay) * invSlope2))
 
 			if xEnd < xStart {
 				xStart, xEnd = xEnd, xStart // swap if xStart is to the right of xEnd
