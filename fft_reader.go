@@ -401,7 +401,7 @@ func (r *MeshFile) readQuadNormal() [][3]Vec3 {
 func (r *MeshFile) readUV() Tex {
 	x := float64(r.readUint8())
 	y := float64(r.readUint8())
-	return Tex{U: x, V: y}
+	return Tex{u: x, v: y}
 }
 
 func (r *MeshFile) readTriUV() ([3]Tex, int) {
@@ -511,8 +511,8 @@ func (r *MeshFile) readBackground() Background {
 // 2. Normalize the coordinates that can be U: 0-255 and V: 0-1023. Just divide
 // them by their max to get a 0.0-1.0 value.
 func processTexCoords(uv Tex, page int) Tex {
-	v := float64(int(uv.V) + page*256)
-	return Tex{U: uv.U / 255, V: v / 1023.0}
+	v := float64(int(uv.v) + page*256)
+	return Tex{u: uv.u / 255, v: v / 1023.0}
 }
 
 // textureSplitPixels takes the ISO's raw bytes and splits each of them into two

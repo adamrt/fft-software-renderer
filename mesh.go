@@ -3,7 +3,7 @@ package main
 import "math"
 
 type Tex struct {
-	U, V float64
+	u, v float64
 }
 
 type Triangle struct {

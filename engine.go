@@ -186,7 +186,7 @@ func (e *Engine) render() {
 
 		if showTexture {
 			at, bt, ct := t.texcoords[0], t.texcoords[1], t.texcoords[2]
-			e.renderer.DrawTexturedTriangle(int(a.x), int(a.y), at.U, at.V, int(b.x), int(b.y), bt.U, bt.V, int(c.x), int(c.y), ct.U, ct.V, model.mesh.texture, t.palette)
+			e.renderer.DrawTexturedTriangle(int(a.x), int(a.y), at.u, at.v, int(b.x), int(b.y), bt.u, bt.v, int(c.x), int(c.y), ct.u, ct.v, model.mesh.texture, t.palette)
 		} else {
 			e.renderer.DrawFilledTriangle(int(a.x), int(a.y), int(b.x), int(b.y), int(c.x), int(c.y), t.color)
 		}

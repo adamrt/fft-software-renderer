@@ -34,11 +34,11 @@ func NewMeshFromObj(objFilename string) Mesh {
 			vertices = append(vertices, v)
 		case strings.HasPrefix(line, "vt "):
 			var vt Tex
-			matches, err := fmt.Fscanf(strings.NewReader(line), "vt %f %f", &vt.U, &vt.V)
+			matches, err := fmt.Fscanf(strings.NewReader(line), "vt %f %f", &vt.u, &vt.v)
 			if err != nil || matches != 2 {
 				log.Fatalf("vertex: only %d matches on line %q\n", matches, line)
 			}
-			vt.V = 1 - vt.V
+			vt.v = 1 - vt.v
 			vts = append(vts, vt)
 		case strings.HasPrefix(line, "f "):
 			var vertexIndices [3]int
