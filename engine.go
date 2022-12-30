@@ -30,6 +30,8 @@ var (
 	// Data
 	model      Model
 	currentMap int
+
+	light DirectionalLight
 )
 
 type Engine struct {
@@ -53,6 +55,8 @@ func NewEngine(window *Window, renderer *Renderer, reader *Reader) *Engine {
 func (e *Engine) setup() {
 	e.isRunning = true
 	previous = sdl.GetTicks()
+
+	light = DirectionalLight{position: Vec3{-1, 1, -1}, target: Vec3{0, 0, 0}}
 }
 
 func (e *Engine) processInput() {
@@ -122,6 +126,13 @@ func (e *Engine) updateModel(model *Model) {
 		// Transform vertices with World Matrix
 		for i, vertex := range triangle.vertices {
 			vertex = model.Matrix().MulVec3(vertex)
+			vertices[i] = vertex
+		}
+
+		normal := verticesNormal(vertices)
+		triangle.lightIntensity = -normal.Dot(light.direction())
+
+		for i, vertex := range vertices {
 			vertex = e.camera.ViewMatrix().MulVec3(vertex)
 			vertices[i] = vertex
 		}
@@ -186,9 +197,9 @@ func (e *Engine) render() {
 
 		if showTexture {
 			at, bt, ct := t.texcoords[0], t.texcoords[1], t.texcoords[2]
-			e.renderer.DrawTexturedTriangle(int(a.x), int(a.y), at, int(b.x), int(b.y), bt, int(c.x), int(c.y), ct, model.mesh.texture, t.palette)
+			e.renderer.DrawTexturedTriangle(int(a.x), int(a.y), at, int(b.x), int(b.y), bt, int(c.x), int(c.y), ct, model.mesh.texture, t)
 		} else {
-			e.renderer.DrawFilledTriangle(int(a.x), int(a.y), int(b.x), int(b.y), int(c.x), int(c.y), t.color)
+			e.renderer.DrawFilledTriangle(int(a.x), int(a.y), int(b.x), int(b.y), int(c.x), int(c.y), t)
 		}
 
 		if showWireframe {
@@ -306,4 +317,14 @@ func shouldCull(vertices [3]Vec3) bool {
 	}
 
 	return false
+}
+
+func verticesNormal(vv [3]Vec3) Vec3 {
+	a := vv[0]
+	b := vv[1]
+	c := vv[2]
+	vectorAB := b.Sub(a).Normalize()
+	vectorAC := c.Sub(a).Normalize()
+	normal := vectorAB.Cross(vectorAC).Normalize()
+	return normal
 }

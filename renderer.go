@@ -52,7 +52,7 @@ func (r *Renderer) DrawTriangle(ax, ay, bx, by, cx, cy int, color Color) {
 
 }
 
-func (r *Renderer) DrawFilledTriangle(ax, ay, bx, by, cx, cy int, color Color) {
+func (r *Renderer) DrawFilledTriangle(ax, ay, bx, by, cx, cy int, t Triangle) {
 	// We need to sort the vertices by y-coordinate ascending (y0 < y1 < y2)
 	if ay > by {
 		ay, by = by, ay
@@ -69,20 +69,20 @@ func (r *Renderer) DrawFilledTriangle(ax, ay, bx, by, cx, cy int, color Color) {
 
 	if by == cy {
 		// Draw flat-bottom triangle
-		r.fillFlatBottomTriangle(ax, ay, bx, by, cx, cy, color)
+		r.fillFlatBottomTriangle(ax, ay, bx, by, cx, cy, t)
 	} else if ay == by {
 		// Draw flat-top triangle
-		r.fillFlatTopTriangle(ax, ay, bx, by, cx, cy, color)
+		r.fillFlatTopTriangle(ax, ay, bx, by, cx, cy, t)
 	} else {
 		// Calculate the new vertex (Mx,My) using triangle similarity
 		My := by
 		Mx := (((cx - ax) * (by - ay)) / (cy - ay)) + ax
 
 		// Draw flat-bottom triangle
-		r.fillFlatBottomTriangle(ax, ay, bx, by, Mx, My, color)
+		r.fillFlatBottomTriangle(ax, ay, bx, by, Mx, My, t)
 
 		// Draw flat-top triangle
-		r.fillFlatTopTriangle(bx, by, Mx, My, cx, cy, color)
+		r.fillFlatTopTriangle(bx, by, Mx, My, cx, cy, t)
 	}
 }
 
@@ -90,7 +90,7 @@ func (r *Renderer) DrawTexturedTriangle(
 	ax, ay int, at Tex,
 	bx, by int, bt Tex,
 	cx, cy int, ct Tex,
-	texture Texture, palette Palette,
+	texture Texture, t Triangle,
 ) {
 	// We need to sort the vertices by y-coordinate ascending (y0 < y1 < y2)
 	if ay > by {
@@ -138,7 +138,7 @@ func (r *Renderer) DrawTexturedTriangle(
 
 			for x := xStart; x < xEnd; x++ {
 				// Draw our pixel with the color that comes from the texture
-				r.drawTexel(x, y, texture, palette, a, b, c, at, bt, ct)
+				r.drawTexel(x, y, texture, t, a, b, c, at, bt, ct)
 			}
 		}
 	}
@@ -167,13 +167,13 @@ func (r *Renderer) DrawTexturedTriangle(
 
 			for x := xStart; x < xEnd; x++ {
 				// Draw our pixel with the color that comes from the texture
-				r.drawTexel(x, y, texture, palette, a, b, c, at, bt, ct)
+				r.drawTexel(x, y, texture, t, a, b, c, at, bt, ct)
 			}
 		}
 	}
 }
 
-func (r *Renderer) fillFlatBottomTriangle(ax, ay, bx, by, cx, cy int, color Color) {
+func (r *Renderer) fillFlatBottomTriangle(ax, ay, bx, by, cx, cy int, t Triangle) {
 	// Find the two slopes (two triangle legs)
 	invSlope1 := float64(bx-ax) / float64(by-ay)
 	invSlope2 := float64(cx-ax) / float64(cy-ay)
@@ -183,6 +183,7 @@ func (r *Renderer) fillFlatBottomTriangle(ax, ay, bx, by, cx, cy int, color Colo
 	xEnd := float64(ax)
 
 	// Loop all the scanlines from top to bottom
+	color := applyLightIntensity(t.color, t.lightIntensity)
 	for y := ay; y <= cy; y++ {
 		r.DrawLine(int(xStart), y, int(xEnd), y, color)
 		xStart += invSlope1
@@ -190,7 +191,7 @@ func (r *Renderer) fillFlatBottomTriangle(ax, ay, bx, by, cx, cy int, color Colo
 	}
 }
 
-func (r *Renderer) fillFlatTopTriangle(ax, ay, bx, by, cx, cy int, color Color) {
+func (r *Renderer) fillFlatTopTriangle(ax, ay, bx, by, cx, cy int, t Triangle) {
 	// Find the two slopes (two triangle legs)
 	invSlope1 := float64(cx-ax) / float64(cy-ay)
 	invSlope2 := float64(cx-bx) / float64(cy-by)
@@ -200,6 +201,7 @@ func (r *Renderer) fillFlatTopTriangle(ax, ay, bx, by, cx, cy int, color Color) 
 	xEnd := float64(cx)
 
 	// Loop all the scanlines from bottom to top
+	color := applyLightIntensity(t.color, t.lightIntensity)
 	for y := cy; y >= ay; y-- {
 		r.DrawLine(int(xStart), y, int(xEnd), y, color)
 		xStart -= invSlope1
@@ -209,7 +211,8 @@ func (r *Renderer) fillFlatTopTriangle(ax, ay, bx, by, cx, cy int, color Color) 
 
 func (r *Renderer) drawTexel(
 	x, y int,
-	texture Texture, palette Palette,
+	texture Texture,
+	t Triangle,
 	a, b, c Vec2,
 	at, bt, ct Tex,
 ) {
@@ -237,9 +240,11 @@ func (r *Renderer) drawTexel(
 	textureColor := texture.data[index]
 	// If there is a palette, the current color components will
 	// represent the index into the palette.
-	if palette != nil {
-		textureColor = palette[textureColor.R]
+	if t.palette != nil {
+		textureColor = t.palette[textureColor.R]
 	}
+
+	textureColor = applyLightIntensity(textureColor, t.lightIntensity)
 
 	// Transparent texture
 	if textureColor.isTrans() {
