@@ -87,29 +87,26 @@ func (r *Renderer) DrawFilledTriangle(ax, ay, bx, by, cx, cy int, color Color) {
 }
 
 func (r *Renderer) DrawTexturedTriangle(
-	ax, ay int, au, av float64,
-	bx, by int, bu, bv float64,
-	cx, cy int, cu, cv float64,
+	ax, ay int, at Tex,
+	bx, by int, bt Tex,
+	cx, cy int, ct Tex,
 	texture Texture, palette Palette,
 ) {
 	// We need to sort the vertices by y-coordinate ascending (y0 < y1 < y2)
 	if ay > by {
 		ay, by = by, ay
 		ax, bx = bx, ax
-		au, bu = bu, au
-		av, bv = bv, av
+		at, bt = bt, at
 	}
 	if by > cy {
 		by, cy = cy, by
 		bx, cx = cx, bx
-		bu, cu = cu, bu
-		bv, cv = cv, bv
+		bt, ct = ct, bt
 	}
 	if ay > by {
 		ay, by = by, ay
 		ax, bx = bx, ax
-		au, bu = bu, au
-		av, bv = bv, av
+		at, bt = bt, at
 	}
 
 	// Create vector points and texture coords after we sort the vertices
@@ -141,7 +138,7 @@ func (r *Renderer) DrawTexturedTriangle(
 
 			for x := xStart; x < xEnd; x++ {
 				// Draw our pixel with the color that comes from the texture
-				r.drawTexel(x, y, texture, palette, a, b, c, au, av, bu, bv, cu, cv)
+				r.drawTexel(x, y, texture, palette, a, b, c, at, bt, ct)
 			}
 		}
 	}
@@ -170,7 +167,7 @@ func (r *Renderer) DrawTexturedTriangle(
 
 			for x := xStart; x < xEnd; x++ {
 				// Draw our pixel with the color that comes from the texture
-				r.drawTexel(x, y, texture, palette, a, b, c, au, av, bu, bv, cu, cv)
+				r.drawTexel(x, y, texture, palette, a, b, c, at, bt, ct)
 			}
 		}
 	}
@@ -214,7 +211,7 @@ func (r *Renderer) drawTexel(
 	x, y int,
 	texture Texture, palette Palette,
 	a, b, c Vec2,
-	au, av, bu, bv, cu, cv float64,
+	at, bt, ct Tex,
 ) {
 	p := Vec2{float64(x), float64(y)}
 	weights := barycentricWeights(a, b, c, p)
@@ -224,8 +221,8 @@ func (r *Renderer) drawTexel(
 	gamma := weights.z
 
 	// Perform the interpolation of all U and V values using barycentric weights
-	interpolatedU := (au)*alpha + (bu)*beta + (cu)*gamma
-	interpolatedV := (av)*alpha + (bv)*beta + (cv)*gamma
+	interpolatedU := (at.u)*alpha + (bt.u)*beta + (ct.u)*gamma
+	interpolatedV := (at.v)*alpha + (bt.v)*beta + (ct.v)*gamma
 
 	// Map the UV coordinate to the full texture width and height
 	texX := abs(int(interpolatedU * float64(texture.width)))
