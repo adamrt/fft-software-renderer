@@ -32,6 +32,7 @@ var (
 	currentMap int
 
 	light DirectionalLight
+	modelScale float64 = 15.0
 )
 
 type Engine struct {

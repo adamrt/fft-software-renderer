@@ -155,11 +155,7 @@ func (r Reader) ReadMesh(mapNum int) Mesh {
 	if len(textures) > 0 {
 		mesh.texture = textures[0]
 	}
-
-	s := 15.0
-	mesh.scale = Vec3{s, s, s}
-	// mesh.normalizeCoordinates()
-	mesh.centerCoordinates()
+	mesh.scale = Vec3{modelScale, modelScale, modelScale}
 	return mesh
 }
 
