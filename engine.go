@@ -274,6 +274,12 @@ func (e *Engine) toggleBackgorund() {
 func (e *Engine) setMap(n int) {
 	currentMap = n
 	model.mesh = e.reader.ReadMesh(n)
+
+	// Center camera on center of obj
+	center := model.mesh.coordCenter().Mul(modelScale)
+	e.camera.front = center
+	e.camera.updateViewMatrix()
+
 	if showMapBackground {
 		e.updateBackgroundTexture()
 	}

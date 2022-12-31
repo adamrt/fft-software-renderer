@@ -59,11 +59,9 @@ func (m *Mesh) coordCenter() Vec3 {
 		}
 	}
 
-	// Not using the Y coord since FFT maps already sit on the floor. Adding
-	// the Y translation would put the floor at the models 1/2 height point.
-	x := -(maxx + minx) / 2.0
-	y := -(maxy + miny) / 2.0
-	z := -(maxz + minz) / 2.0
+	x := (maxx + minx) / 2.0
+	y := (maxy + miny) / 2.0
+	z := (maxz + minz) / 2.0
 
 	return Vec3{x, y, z}
 }
