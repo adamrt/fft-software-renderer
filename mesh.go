@@ -13,9 +13,9 @@ type Triangle struct {
 	palette   Palette
 
 	// Computed during render
-	points         [3]Vec2
-	avgDepth       float64
-	lightIntensity float64
+	points     [3]Vec2
+	avgDepth   float64
+	lightColor Color
 
 	// Color of untextured triangle
 	color Color

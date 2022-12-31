@@ -183,7 +183,7 @@ func (r *Renderer) fillFlatBottomTriangle(ax, ay, bx, by, cx, cy int, t Triangle
 	xEnd := float64(ax)
 
 	// Loop all the scanlines from top to bottom
-	color := applyLightIntensity(t.color, t.lightIntensity)
+	color := t.color.Mul(t.lightColor)
 	for y := ay; y <= cy; y++ {
 		r.DrawLine(int(xStart), y, int(xEnd), y, color)
 		xStart += invSlope1
@@ -201,7 +201,7 @@ func (r *Renderer) fillFlatTopTriangle(ax, ay, bx, by, cx, cy int, t Triangle) {
 	xEnd := float64(cx)
 
 	// Loop all the scanlines from bottom to top
-	color := applyLightIntensity(t.color, t.lightIntensity)
+	color := t.color.Mul(t.lightColor)
 	for y := cy; y >= ay; y-- {
 		r.DrawLine(int(xStart), y, int(xEnd), y, color)
 		xStart -= invSlope1
@@ -244,7 +244,9 @@ func (r *Renderer) drawTexel(
 		textureColor = t.palette[textureColor.R]
 	}
 
-	textureColor = applyLightIntensity(textureColor, t.lightIntensity)
+	if showLighting {
+		textureColor = textureColor.Mul(t.lightColor)
+	}
 
 	// Transparent texture
 	if textureColor.isTrans() {

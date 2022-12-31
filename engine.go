@@ -19,6 +19,7 @@ var (
 	showTexture       = true
 	showWireframe     = false
 	showMapBackground = false
+	showLighting      = true
 
 	// Timing
 	previous uint32
@@ -31,7 +32,6 @@ var (
 	model      Model
 	currentMap int
 
-	light DirectionalLight
 	modelScale float64 = 15.0
 )
 
@@ -56,8 +56,6 @@ func NewEngine(window *Window, renderer *Renderer, reader *Reader) *Engine {
 func (e *Engine) setup() {
 	e.isRunning = true
 	previous = sdl.GetTicks()
-
-	light = DirectionalLight{position: Vec3{-1, 1, -1}, target: Vec3{0, 0, 0}}
 }
 
 func (e *Engine) processInput() {
@@ -80,6 +78,8 @@ func (e *Engine) processInput() {
 				showTexture = !showTexture
 			case sdl.K_w:
 				showWireframe = !showWireframe
+			case sdl.K_l:
+				showLighting = !showLighting
 			case sdl.K_p:
 				e.camera.toggleProjection()
 			case sdl.K_b:
@@ -119,8 +119,14 @@ func (e *Engine) updateModel(model *Model) {
 		model.mesh.rotation.y += 0.5 * delta
 	}
 
-	model.UpdateMatrix()
+	matrix := MatrixWorld(Vec3{modelScale, modelScale, modelScale}, Vec3{0, 0, 0}, Vec3{0, 0, 0})
+	lights := make([]DirectionalLight, len(model.mesh.directionalLights))
+	for i, light := range model.mesh.directionalLights {
+		light.position = matrix.MulVec3(light.position)
+		lights[i] = light
+	}
 
+	model.UpdateMatrix()
 	for _, triangle := range model.mesh.triangles {
 		var vertices [3]Vec3
 
@@ -131,7 +137,12 @@ func (e *Engine) updateModel(model *Model) {
 		}
 
 		normal := verticesNormal(vertices)
-		triangle.lightIntensity = -normal.Dot(light.direction())
+		for _, light := range lights {
+			intensity := -normal.Dot(vertices[0].Sub(light.position).Normalize())
+			color := light.color.Scale(intensity)
+			triangle.lightColor = triangle.lightColor.Add(color)
+		}
+		triangle.lightColor = triangle.lightColor.Add(model.mesh.ambientLight.color).Scale(2.0)
 
 		for i, vertex := range vertices {
 			vertex = e.camera.ViewMatrix().MulVec3(vertex)
@@ -212,6 +223,7 @@ func (e *Engine) render() {
 		textHelp       = "[H]elp: Show"
 		textProj       = "[P]rojection: "
 		textBackground = "[B]ackground: "
+		textLighting   = "[L]ighting: "
 		textTexture    = "[T]exture: "
 		textWireframe  = "[W]ireframe: "
 		textAutorotate = "[A]uto rotate: "
@@ -226,6 +238,11 @@ func (e *Engine) render() {
 			textBackground += "Map"
 		} else {
 			textBackground += "Default"
+		}
+		if showLighting {
+			textLighting += "Enabled"
+		} else {
+			textLighting += "Disabled"
 		}
 		if showTexture {
 			textTexture += "Show"
@@ -242,14 +259,15 @@ func (e *Engine) render() {
 		} else {
 			textAutorotate += "Off"
 		}
-		e.window.TextBackground(200, 220, Color{255, 255, 255, 30})
+		e.window.TextBackground(200, 250, Color{255, 255, 255, 30})
 		e.window.SetText(10, 10, textHelp, White)
 		e.window.SetText(10, 40, textProj, White)
 		e.window.SetText(10, 70, textTexture, White)
-		e.window.SetText(10, 100, textWireframe, White)
-		e.window.SetText(10, 130, textBackground, White)
-		e.window.SetText(10, 160, textAutorotate, White)
-		e.window.SetText(10, 190, "[J/K] Next/Previous", White)
+		e.window.SetText(10, 100, textLighting, White)
+		e.window.SetText(10, 130, textWireframe, White)
+		e.window.SetText(10, 160, textBackground, White)
+		e.window.SetText(10, 190, textAutorotate, White)
+		e.window.SetText(10, 220, "[J/K] Next/Previous", White)
 	}
 	// Present
 	e.window.Present()
