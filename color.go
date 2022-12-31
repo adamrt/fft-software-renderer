@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"math/rand"
 
 	"github.com/veandco/go-sdl2/sdl"
@@ -35,12 +36,39 @@ func (c Color) isTrans() bool {
 	return c.A == 0 && c.R == 0 && c.G == 0 && c.B == 0
 }
 
-func (c Color) Mul(factor float64) Color {
-	factor = clamp(factor, 0.0, 1.0)
+func (c Color) Add(o Color) Color {
+	r := math.Max(0.0, math.Min(1.0, (float64(c.R)/255.0)+(float64(o.R)/255.0)))
+	g := math.Max(0.0, math.Min(1.0, (float64(c.G)/255.0)+(float64(o.G)/255.0)))
+	b := math.Max(0.0, math.Min(1.0, (float64(c.B)/255.0)+(float64(o.B)/255.0)))
+
 	return Color{
-		R: uint8(float64(c.R) * factor),
-		G: uint8(float64(c.G) * factor),
-		B: uint8(float64(c.B) * factor),
+		R: uint8(r * 255),
+		G: uint8(g * 255),
+		B: uint8(b * 255),
+		A: c.A,
+	}
+}
+
+func (c Color) Mul(o Color) Color {
+	r := math.Max(0.0, math.Min(1.0, (float64(c.R)/255.0)*(float64(o.R)/255.0)))
+	g := math.Max(0.0, math.Min(1.0, (float64(c.G)/255.0)*(float64(o.G)/255.0)))
+	b := math.Max(0.0, math.Min(1.0, (float64(c.B)/255.0)*(float64(o.B)/255.0)))
+	return Color{
+		R: uint8(r * 255),
+		G: uint8(g * 255),
+		B: uint8(b * 255),
+		A: c.A,
+	}
+}
+
+func (c Color) Scale(factor float64) Color {
+	r := math.Max(0.0, math.Min(255.0, float64(c.R)*factor))
+	g := math.Max(0.0, math.Min(255.0, float64(c.G)*factor))
+	b := math.Max(0.0, math.Min(255.0, float64(c.B)*factor))
+	return Color{
+		R: uint8(r),
+		G: uint8(g),
+		B: uint8(b),
 		A: c.A,
 	}
 }
