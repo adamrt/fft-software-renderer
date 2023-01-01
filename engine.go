@@ -119,7 +119,7 @@ func (e *Engine) updateModel(model *Model) {
 		model.mesh.rotation.y += 0.5 * delta
 	}
 
-	matrix := MatrixWorld(Vec3{modelScale, modelScale, modelScale}, Vec3{0, 0, 0}, Vec3{0, 0, 0})
+	matrix := MatrixScale(Vec3{modelScale, modelScale, modelScale})
 	lights := make([]DirectionalLight, len(model.mesh.directionalLights))
 	for i, light := range model.mesh.directionalLights {
 		light.position = matrix.MulVec3(light.position)
@@ -204,18 +204,15 @@ func (e *Engine) updateModel(model *Model) {
 func (e *Engine) render() {
 	// Draw
 	for _, t := range model.trianglesToRender {
-		// Draw triangles
-		a, b, c := t.points[0], t.points[1], t.points[2]
-
 		if showTexture {
-			at, bt, ct := t.texcoords[0], t.texcoords[1], t.texcoords[2]
-			e.renderer.DrawTexturedTriangle(int(a.x), int(a.y), at, int(b.x), int(b.y), bt, int(c.x), int(c.y), ct, model.mesh.texture, t)
+			e.renderer.DrawTexturedTriangle(t, model.mesh.texture)
 		} else {
-			e.renderer.DrawFilledTriangle(int(a.x), int(a.y), int(b.x), int(b.y), int(c.x), int(c.y), t)
+			e.renderer.DrawFilledTriangle(t)
 		}
 
 		if showWireframe {
-			e.renderer.DrawTriangle(int(a.x), int(a.y), int(b.x), int(b.y), int(c.x), int(c.y), Magenta)
+			t.color = Magenta
+			e.renderer.DrawTriangle(t)
 		}
 	}
 

@@ -45,14 +45,21 @@ func (r *Renderer) DrawLine(x0, y0, x1, y1 int, color Color) {
 	}
 }
 
-func (r *Renderer) DrawTriangle(ax, ay, bx, by, cx, cy int, color Color) {
-	r.DrawLine(int(ax), int(ay), int(bx), int(by), color)
-	r.DrawLine(int(bx), int(by), int(cx), int(cy), color)
-	r.DrawLine(int(cx), int(cy), int(ax), int(ay), color)
+func (r *Renderer) DrawTriangle(t Triangle) {
+	ax, ay := int(t.points[0].x), int(t.points[0].y)
+	bx, by := int(t.points[1].x), int(t.points[1].y)
+	cx, cy := int(t.points[2].x), int(t.points[2].y)
+	r.DrawLine(ax, ay, bx, by, t.color)
+	r.DrawLine(bx, by, cx, cy, t.color)
+	r.DrawLine(cx, cy, ax, ay, t.color)
 
 }
 
-func (r *Renderer) DrawFilledTriangle(ax, ay, bx, by, cx, cy int, t Triangle) {
+func (r *Renderer) DrawFilledTriangle(t Triangle) {
+	ax, ay := int(t.points[0].x), int(t.points[0].y)
+	bx, by := int(t.points[1].x), int(t.points[1].y)
+	cx, cy := int(t.points[2].x), int(t.points[2].y)
+
 	// We need to sort the vertices by y-coordinate ascending (y0 < y1 < y2)
 	if ay > by {
 		ay, by = by, ay
@@ -86,12 +93,12 @@ func (r *Renderer) DrawFilledTriangle(ax, ay, bx, by, cx, cy int, t Triangle) {
 	}
 }
 
-func (r *Renderer) DrawTexturedTriangle(
-	ax, ay int, at Tex,
-	bx, by int, bt Tex,
-	cx, cy int, ct Tex,
-	texture Texture, t Triangle,
-) {
+func (r *Renderer) DrawTexturedTriangle(t Triangle, texture Texture) {
+	ax, ay := int(t.points[0].x), int(t.points[0].y)
+	bx, by := int(t.points[1].x), int(t.points[1].y)
+	cx, cy := int(t.points[2].x), int(t.points[2].y)
+	at, bt, ct := t.texcoords[0], t.texcoords[1], t.texcoords[2]
+
 	// We need to sort the vertices by y-coordinate ascending (y0 < y1 < y2)
 	if ay > by {
 		ay, by = by, ay
@@ -209,13 +216,7 @@ func (r *Renderer) fillFlatTopTriangle(ax, ay, bx, by, cx, cy int, t Triangle) {
 	}
 }
 
-func (r *Renderer) drawTexel(
-	x, y int,
-	texture Texture,
-	t Triangle,
-	a, b, c Vec2,
-	at, bt, ct Tex,
-) {
+func (r *Renderer) drawTexel(x, y int, texture Texture, t Triangle, a, b, c Vec2, at, bt, ct Tex) {
 	p := Vec2{float64(x), float64(y)}
 	weights := barycentricWeights(a, b, c, p)
 
