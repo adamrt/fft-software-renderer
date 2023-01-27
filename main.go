@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -18,6 +19,7 @@ func main() {
 	renderer := NewRenderer(window)
 
 	path := getPath()
+
 	reader := NewReader(path)
 
 	engine := NewEngine(window, renderer, reader)
@@ -32,15 +34,23 @@ func main() {
 }
 
 func getPath() string {
-	// Use user specified path
+	var path string
 	if len(os.Args) > 1 {
-		return os.Args[1]
+		// User specified path
+		path = os.Args[1]
+	} else {
+		// Use default path
+		usr, err := user.Current()
+		if err != nil {
+			panic(err)
+		}
+		path = filepath.Join(usr.HomeDir, "tmp", "emu", "fft.bin")
 	}
 
-	// Use default path
-	usr, err := user.Current()
-	if err != nil {
-		panic(err)
+	if _, err := os.Stat(path); err != nil {
+		fmt.Printf("Usage: go run *.go <path-to-bin>\n\n")
+		os.Exit(0)
 	}
-	return filepath.Join(usr.HomeDir, "tmp", "emu", "fft.bin")
+
+	return path
 }

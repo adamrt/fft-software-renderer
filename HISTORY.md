@@ -76,8 +76,8 @@ of the ones I referred to the most.
   Currently we are using `float64` for everything. `float32` would be
   perfectly fine and use less memory, but Go's math lib uses `float64`
   for everything. Additionally, we use so few vertices for a FFT map
-  that the overhead is that much. This could be changed in the future
-  is memory usage is high.
+  that the overhead isn't that much. This could be changed in the
+  future if memory usage increases.
 
 # Daily Notes
 ## 2022-01-27
@@ -86,7 +86,7 @@ There was a memory leak due to the sdl_ttf textures and surfaces that
 are created every frame. I now destroy the textures and free the
 surfaces each frame.
 
-In the future if would make much more sense to just create these and
+In the future it would make much more sense to just create these and
 only recreate/destroy/free them when the options change.
 
 ## 2022-12-30
