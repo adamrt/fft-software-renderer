@@ -80,9 +80,48 @@ of the ones I referred to the most.
   is memory usage is high.
 
 # Daily Notes
+## 2022-01-27
+
+There was a memory leak due to the sdl_ttf textures and surfaces that
+are created every frame. I now destroy the textures and free the
+surfaces each frame.
+
+In the future if would make much more sense to just create these and
+only recreate/destroy/free them when the options change.
+
+## 2022-12-30
+
+Add directional and ambient lighting. I'm not sure if the coloring is
+working accurately at this time though.
+
+Instead of modifying vertices during map load to center/normalize
+them, we just scale the map and change the camera to point to the
+center.
+
+## 2022-12-29
+
+Change to reading bin files instead of iso. It seems like iso was just
+happening to work even though it kinda shouldn't have. Instead of
+starting at the sector and reading as much as we needed, we now read
+and concatenate consecutive sector data (discarding sector headers).
+
 ## 2022-12-28
+
 Fix gaps in textures due to rounder errors when drawing textured
 triangles.
+
+## 2022-12-24
+
+Add dynamic menu with options and keymappings.
+
+## 2022-12-19
+
+Move the view and projection matrix into the camera and implement
+proper zooming. Previously zoom was acheived by scaling the
+model. That looked okay, but when you have multiple models it is
+obvious that you are scaling. Now we have a zoom factor.
+
+Add level backgrounds
 
 ## 2022-12-17
 

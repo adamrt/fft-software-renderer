@@ -116,6 +116,8 @@ func (w *Window) SetText(x, y int, text string, color Color) {
 	if err != nil {
 		panic(err)
 	}
+	defer surface.Free()
+
 	texture, err := w.renderer.CreateTextureFromSurface(surface)
 	if err != nil {
 		panic(err)
@@ -170,6 +172,7 @@ func (w *Window) Present() {
 	w.renderer.Copy(w.fgTexture, nil, nil)
 	for _, tt := range w.textTextures {
 		w.renderer.Copy(tt.texture, nil, tt.rect)
+		tt.texture.Destroy()
 	}
 
 	w.renderer.Present()
