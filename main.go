@@ -21,6 +21,7 @@ func main() {
 	path := getPath()
 
 	reader := NewReader(path)
+	defer reader.Close()
 
 	engine := NewEngine(window, renderer, reader)
 	engine.setMap(49)
