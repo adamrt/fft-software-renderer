@@ -18,7 +18,12 @@ func main() {
 	defer window.Close()
 	renderer := NewRenderer(window)
 
-	path := getPath()
+	path, err := getPath()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		fmt.Fprintln(os.Stderr, "Usage: go run *.go <path-to-bin>")
+		os.Exit(1)
+	}
 
 	reader := NewReader(path)
 	defer reader.Close()
@@ -34,7 +39,7 @@ func main() {
 	}
 }
 
-func getPath() string {
+func getPath() (string, error) {
 	var path string
 	if len(os.Args) > 1 {
 		// User specified path
@@ -43,15 +48,14 @@ func getPath() string {
 		// Use default path
 		usr, err := user.Current()
 		if err != nil {
-			panic(err)
+			return "", err
 		}
-		path = filepath.Join(usr.HomeDir, "tmp", "emu", "fft.bin")
+		path = filepath.Join(usr.HomeDir, "media", "emu", "fft.bin")
 	}
 
 	if _, err := os.Stat(path); err != nil {
-		fmt.Printf("Usage: go run *.go <path-to-bin>\n\n")
-		os.Exit(0)
+		return "", err
 	}
 
-	return path
+	return path, nil
 }
