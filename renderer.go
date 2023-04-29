@@ -259,24 +259,10 @@ func (r *Renderer) drawTexel(x, y int, texture Texture, t Triangle, a, b, c Vec2
 }
 
 func barycentricWeights(a, b, c, p Vec2) Vec3 {
-	ab := b.Sub(a)
-	bc := c.Sub(b)
-	ac := c.Sub(a)
-	ap := p.Sub(a)
-	bp := p.Sub(b)
-
-	// Calcualte the area of the full triangle ABC using cross product (area of parallelogram)
-	triangleArea := (ab.x*ac.y - ab.y*ac.x)
-
-	// Weight alpha is the area of subtriangle BCP divided by the area of the full triangle ABC
-	alpha := (bc.x*bp.y - bp.x*bc.y) / triangleArea
-
-	// Weight beta is the area of subtriangle ACP divided by the area of the full triangle ABC
-	beta := (ap.x*ac.y - ac.x*ap.y) / triangleArea
-
-	// Weight gamma is easily found since barycentric cooordinates always add up to 1
-	gamma := 1 - alpha - beta
-
-	weights := Vec3{alpha, beta, gamma}
-	return weights
+	ab, ac, ap := b.Sub(a), c.Sub(a), p.Sub(a)
+	den := ab.x*ac.y - ac.x*ab.y
+	v := (ap.x*ac.y - ac.x*ap.y) / den
+	w := (ab.x*ap.y - ap.x*ab.y) / den
+	u := 1.0 - v - w
+	return Vec3{u, v, w}
 }
