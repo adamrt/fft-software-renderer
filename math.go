@@ -17,6 +17,10 @@ func (v Vec2) Sub(u Vec2) Vec2 {
 	}
 }
 
+func (v Vec2) Dot(u Vec2) float64 {
+	return v.x*u.x + v.y*u.y
+}
+
 //
 // Vec3
 //
