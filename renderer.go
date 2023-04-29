@@ -218,15 +218,11 @@ func (r *Renderer) fillFlatTopTriangle(ax, ay, bx, by, cx, cy int, t Triangle) {
 
 func (r *Renderer) drawTexel(x, y int, texture Texture, t Triangle, a, b, c Vec2, at, bt, ct Tex) {
 	p := Vec2{float64(x), float64(y)}
-	weights := barycentricWeights(a, b, c, p)
-
-	alpha := weights.x
-	beta := weights.y
-	gamma := weights.z
+	alpha, beta, gamma := barycentricWeights(a, b, c, p)
 
 	// Perform the interpolation of all U and V values using barycentric weights
-	interpolatedU := (at.u)*alpha + (bt.u)*beta + (ct.u)*gamma
-	interpolatedV := (at.v)*alpha + (bt.v)*beta + (ct.v)*gamma
+	interpolatedU := at.u*alpha + bt.u*beta + ct.u*gamma
+	interpolatedV := at.v*alpha + bt.v*beta + ct.v*gamma
 
 	// Map the UV coordinate to the full texture width and height
 	texX := int(interpolatedU * float64(texture.width))
@@ -258,11 +254,11 @@ func (r *Renderer) drawTexel(x, y int, texture Texture, t Triangle, a, b, c Vec2
 
 }
 
-func barycentricWeights(a, b, c, p Vec2) Vec3 {
+func barycentricWeights(a, b, c, p Vec2) (float64, float64, float64) {
 	ab, ac, ap := b.Sub(a), c.Sub(a), p.Sub(a)
 	den := ab.x*ac.y - ac.x*ab.y
 	v := (ap.x*ac.y - ac.x*ap.y) / den
 	w := (ab.x*ap.y - ap.x*ab.y) / den
 	u := 1.0 - v - w
-	return Vec3{u, v, w}
+	return u, v, w
 }
