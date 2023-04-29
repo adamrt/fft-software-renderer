@@ -33,30 +33,29 @@ func (c Color) SDL() sdl.Color {
 }
 
 func (c Color) isTrans() bool {
-	return c.A == 0 && c.R == 0 && c.G == 0 && c.B == 0
+	return c.A+c.R+c.G+c.B == 0
 }
 
 func (c Color) Add(o Color) Color {
-	r := math.Max(0.0, math.Min(1.0, (float64(c.R)/255.0)+(float64(o.R)/255.0)))
-	g := math.Max(0.0, math.Min(1.0, (float64(c.G)/255.0)+(float64(o.G)/255.0)))
-	b := math.Max(0.0, math.Min(1.0, (float64(c.B)/255.0)+(float64(o.B)/255.0)))
-
+	r := math.Min(1.0, (float64(c.R)/255.0)+(float64(o.R)/255.0)) * 255
+	g := math.Min(1.0, (float64(c.G)/255.0)+(float64(o.G)/255.0)) * 255
+	b := math.Min(1.0, (float64(c.B)/255.0)+(float64(o.B)/255.0)) * 255
 	return Color{
-		R: uint8(r * 255),
-		G: uint8(g * 255),
-		B: uint8(b * 255),
+		R: uint8(r),
+		G: uint8(g),
+		B: uint8(b),
 		A: c.A,
 	}
 }
 
 func (c Color) Mul(o Color) Color {
-	r := math.Max(0.0, math.Min(1.0, (float64(c.R)/255.0)*(float64(o.R)/255.0)))
-	g := math.Max(0.0, math.Min(1.0, (float64(c.G)/255.0)*(float64(o.G)/255.0)))
-	b := math.Max(0.0, math.Min(1.0, (float64(c.B)/255.0)*(float64(o.B)/255.0)))
+	r := float64(c.R) * float64(o.R) / 255.0
+	g := float64(c.G) * float64(o.G) / 255.0
+	b := float64(c.B) * float64(o.B) / 255.0
 	return Color{
-		R: uint8(r * 255),
-		G: uint8(g * 255),
-		B: uint8(b * 255),
+		R: uint8(r),
+		G: uint8(g),
+		B: uint8(b),
 		A: c.A,
 	}
 }
