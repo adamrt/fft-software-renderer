@@ -158,9 +158,11 @@ func (w *Window) SetPixel(x, y int, color Color) {
 }
 
 func (w *Window) Clear(color Color) {
+	// Write directly to the buffer because the range checks are not
+	// necessary.
 	for y := 0; y < w.height; y++ {
 		for x := 0; x < w.width; x++ {
-			w.SetPixel(x, y, color)
+			w.colorbuffer[(w.width*y)+x] = color
 		}
 	}
 }
