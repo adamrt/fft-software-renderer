@@ -229,8 +229,8 @@ func (r *Renderer) drawTexel(x, y int, texture Texture, t Triangle, a, b, c Vec2
 	interpolatedV := (at.v)*alpha + (bt.v)*beta + (ct.v)*gamma
 
 	// Map the UV coordinate to the full texture width and height
-	texX := abs(int(interpolatedU * float64(texture.width)))
-	texY := abs(int(interpolatedV * float64(texture.height)))
+	texX := int(interpolatedU * float64(texture.width))
+	texY := int(interpolatedV * float64(texture.height))
 
 	// Validate the index is inside the texture.
 	index := (texY * texture.width) + texX
