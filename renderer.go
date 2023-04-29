@@ -235,19 +235,19 @@ func (r *Renderer) drawTexel(x, y int, texture Texture, t Triangle, a, b, c Vec2
 	}
 
 	textureColor := texture.data[index]
+
 	// If there is a palette, the current color components will
 	// represent the index into the palette.
 	if t.palette != nil {
 		textureColor = t.palette[textureColor.R]
-	}
 
-	if showLighting {
-		textureColor = textureColor.Mul(t.lightColor)
-	}
-
-	// Transparent texture
-	if textureColor.isTrans() {
-		return
+		if showLighting {
+			textureColor = textureColor.Mul(t.lightColor)
+		}
+		// Transparent texture
+		if textureColor.isTrans() {
+			return
+		}
 	}
 
 	r.window.SetPixel(x, y, textureColor)
