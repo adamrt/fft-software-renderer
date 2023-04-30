@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"sort"
 	"unsafe"
 
@@ -22,8 +23,9 @@ var (
 	showLighting      = true
 
 	// Timing
-	previous uint32
-	delta    float64
+	previous   uint32
+	delta      float64
+	frameCount int
 
 	// Controls
 	leftButtonDown = false
@@ -104,17 +106,21 @@ func (e *Engine) processInput() {
 }
 
 func (e *Engine) update() {
+	frameCount++
 	// Variable timestep
 	if wait := MSPerFrame - (sdl.GetTicks() - previous); wait > 0 && wait <= MSPerFrame {
 		sdl.Delay(wait)
 	}
-	delta = float64(sdl.GetTicks()-previous) / 1000.0
+
+	delta = float64(sdl.GetTicks() - previous)
+	if frameCount > 10 {
+		e.window.SetTitle(fmt.Sprintf("FPS: %.2f", 1000.0/delta))
+		frameCount = 0
+	}
+	delta = delta / 1000.0
+
 	previous = sdl.GetTicks()
 
-	e.updateModel(&model)
-}
-
-func (e *Engine) updateModel(model *Model) {
 	if autorotate {
 		model.mesh.rotation.y += 0.5 * delta
 	}

@@ -111,6 +111,10 @@ func newWindow(width, height int, fullscreen bool) *Window {
 	return &w
 }
 
+func (w *Window) SetTitle(title string) {
+	w.window.SetTitle(title)
+}
+
 func (w *Window) SetText(x, y int, text string, color Color) {
 	surface, err := w.font.RenderUTF8Blended(text, color.SDL())
 	if err != nil {
