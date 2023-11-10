@@ -262,3 +262,43 @@ func barycentricWeights(a, b, c, p Vec2) (float64, float64, float64) {
 	u := 1.0 - v - w
 	return u, v, w
 }
+
+var origin = Vec3{0, 0, 0}
+var xAxis = Vec3{1, 0, 0}
+var yAxis = Vec3{0, 1, 0}
+var zAxis = Vec3{0, 0, 1}
+
+func (r *Renderer) DrawOriginAxis(camera *Camera) {
+	worldMatrix := MatrixWorld(Vec3{1, 1, 1}, Vec3{0, 0, 0}, Vec3{0, 0, 0})
+	viewMatrix := camera.ViewMatrix()
+
+	vertices := []Vec3{origin, xAxis, yAxis, zAxis}
+
+	for i, vertex := range vertices {
+		vertex = worldMatrix.MulVec3(vertex.Mul(1.0))
+		vertex = viewMatrix.MulVec3(vertex)
+		vertices[i] = vertex
+	}
+	for i, vertex := range vertices {
+		// Projection
+		vertex = camera.ProjectionMatrix().MulVec3(vertex)
+
+		// Invert the Y asis to compensate for the Y axis of the model and
+		// the color buffer being different (+Y up vs +Y down, respectively).
+		vertex.y *= -1
+
+		// Scale to the viewport
+		vertex.x *= float64(r.window.width / 2)
+		vertex.y *= float64(r.window.height / 2)
+
+		// Translate to center of screen
+		vertex.x += float64(r.window.width / 2)
+		vertex.y += float64(r.window.height / 2)
+
+		vertices[i] = vertex
+	}
+	origin, x, y, z := vertices[0], vertices[1], vertices[2], vertices[3]
+	r.DrawLine(int(origin.x), int(origin.y), int(x.x), int(x.y), Magenta)
+	r.DrawLine(int(origin.x), int(origin.y), int(y.x), int(y.y), Green)
+	r.DrawLine(int(origin.x), int(origin.y), int(z.x), int(z.y), Red)
+}

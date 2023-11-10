@@ -220,6 +220,8 @@ func (e *Engine) render() {
 			t.color = Magenta
 			e.renderer.DrawTriangle(t)
 		}
+
+		// e.renderer.DrawOriginAxis(e.camera)
 	}
 
 	var (
